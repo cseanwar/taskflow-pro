@@ -85,6 +85,11 @@ export async function getTaskCommentsAction(taskId: string) {
   return result.comments || [];
 }
 
+export async function getTaskActivityAction(taskId: string) {
+  const result = await fetchWithAuth(`/tasks/${taskId}/activity`);
+  return result.activity || [];
+}
+
 export async function addCommentAction(taskId: string, projectId: string, text: string, attachments?: string[]) {
   const result = await fetchWithAuth(`/tasks/${taskId}/comments`, {
     method: 'POST',

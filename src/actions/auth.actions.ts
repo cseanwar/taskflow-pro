@@ -34,6 +34,7 @@ export async function registerAction(formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
   const role = (formData.get('role') as string) || 'Team Member';
+  const avatar = (formData.get('avatar') as string) || '';
 
   if (!name || !email || !password) {
     return { success: false, message: 'All fields are required.' };
@@ -41,7 +42,30 @@ export async function registerAction(formData: FormData) {
 
   const result = await fetchWithAuth('/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ name, email, password, role }),
+    body: JSON.stringify({ name, email, password, role, avatar }),
+  });
+
+  if (result.success && result.token) {
+    const cookieStore = await cookies();
+    cookieStore.set('tfp_token', result.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60,
+    });
+  }
+
+  return result;
+}
+
+export async function googleSignInAction(credential: string) {
+  if (!credential) {
+    return { success: false, message: 'Google authentication failed.' };
+  }
+
+  const result = await fetchWithAuth('/auth/google', {
+    method: 'POST',
+    body: JSON.stringify({ credential }),
   });
 
   if (result.success && result.token) {

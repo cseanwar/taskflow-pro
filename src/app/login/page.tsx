@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Kanban, Lock, Mail, Loader2, ArrowRight } from 'lucide-react';
 import { loginAction } from '@/actions/auth.actions';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -43,6 +44,16 @@ export default function LoginPage() {
             {error}
           </div>
         )}
+
+        <GoogleSignInButton onError={setError} text="signin_with" />
+
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-slate-800" />
+          <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
+            or continue with email
+          </span>
+          <div className="h-px flex-1 bg-slate-800" />
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

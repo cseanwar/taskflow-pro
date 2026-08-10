@@ -16,9 +16,9 @@ import {
   Loader2,
   Clock
 } from 'lucide-react';
-import { updateTaskAction, deleteTaskAction, getTaskCommentsAction, addCommentAction } from '@/actions/task.actions';
+import { updateTaskAction, deleteTaskAction, getTaskCommentsAction, addCommentAction, getTaskActivityAction } from '@/actions/task.actions';
 import { imageUploadInImgBB } from '@/utilities/ImgUploadInImgBB';
-import { ITask, IComment, ISprint, IUser } from '@/types';
+import { ITask, IComment, IActivityLog, ISprint, IUser } from '@/types';
 
 interface Props {
   task: ITask | null;
@@ -31,6 +31,7 @@ interface Props {
 
 export default function TaskDetailDrawer({ task, projectId, sprints = [], members = [], onClose, onUpdateSuccess }: Props) {
   const [comments, setComments] = useState<IComment[]>([]);
+  const [activity, setActivity] = useState<IActivityLog[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loadingComment, setLoadingComment] = useState(false);
   const [checklist, setChecklist] = useState(task?.checklist || []);
@@ -38,19 +39,27 @@ export default function TaskDetailDrawer({ task, projectId, sprints = [], member
   const [deleting, setDeleting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
+  const fetchComments = async () => {
+    if (!task) return;
+    const res = await getTaskCommentsAction(task._id);
+    setComments(res);
+  };
+
+  const fetchActivity = async () => {
+    if (!task) return;
+    const res = await getTaskActivityAction(task._id);
+    setActivity(res);
+  };
+
   useEffect(() => {
     if (task) {
       setChecklist(task.checklist || []);
       fetchComments();
+      fetchActivity();
     }
   }, [task]);
 
   if (!task) return null;
-
-  const fetchComments = async () => {
-    const res = await getTaskCommentsAction(task._id);
-    setComments(res);
-  };
 
   const handleUpdateField = async (field: string, value: any) => {
     await updateTaskAction(task._id, projectId, { [field]: value });
@@ -123,7 +132,7 @@ export default function TaskDetailDrawer({ task, projectId, sprints = [], member
           <div className="flex items-center justify-between border-b border-slate-800 pb-4">
             <div className="flex items-center gap-3">
               <span className="rounded-lg bg-indigo-600/20 px-2.5 py-1 text-xs font-bold text-indigo-400">
-                TASK-{task._id.substring(task._id.length - 4)}
+                {task.key || `TASK-${task._id.substring(task._id.length - 4)}`}
               </span>
               <select
                 value={task.columnId}
@@ -285,6 +294,38 @@ export default function TaskDetailDrawer({ task, projectId, sprints = [], member
                   <span className="truncate">{att.name}</span>
                 </a>
               ))}
+            </div>
+          </div>
+
+          {/* Activity Timeline */}
+          <div className="mt-8 border-t border-slate-800 pt-6">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Activity</h4>
+
+            <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+              {activity.length === 0 ? (
+                <p className="text-xs text-slate-500">No activity recorded yet.</p>
+              ) : (
+                activity.map(log => (
+                  <div key={log._id} className="flex gap-3 rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-xs">
+                    <img
+                      src={log.actor?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${log.actor?.name || 'User'}`}
+                      alt="User"
+                      className="h-7 w-7 rounded-full bg-slate-800"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-200">{log.actor?.name || 'User'}</span>
+                        <span className="text-[10px] text-slate-500">
+                          {new Date(log.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}{' '}
+                          {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-slate-300">{log.action}</p>
+                      {log.details && <p className="mt-0.5 text-[11px] text-slate-500">{log.details}</p>}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 

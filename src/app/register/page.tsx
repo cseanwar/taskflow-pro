@@ -2,14 +2,17 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Kanban, Lock, Mail, User, Shield, Loader2 } from 'lucide-react';
+import { Kanban, Lock, Mail, User, Shield, Link2, Loader2 } from 'lucide-react';
 import { registerAction } from '@/actions/auth.actions';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 
 export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -17,6 +20,15 @@ export default function RegisterPage() {
     setError('');
 
     const formData = new FormData(e.currentTarget);
+    const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
+
+    if (password !== confirmPassword) {
+      setLoading(false);
+      setError('Passwords do not match.');
+      return;
+    }
+
     const result = await registerAction(formData);
 
     setLoading(false);
@@ -27,11 +39,13 @@ export default function RegisterPage() {
     }
   };
 
+  const avatarPreview = /^https?:\/\//i.test(avatarUrl) ? avatarUrl : '';
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-12">
       <div className="w-full max-w-md space-y-6 rounded-3xl border border-slate-800 bg-slate-900/70 p-8 shadow-2xl backdrop-blur-xl">
         <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 shadow-lg shadow-indigo-500/30">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-linear-to-tr from-indigo-600 to-violet-500 shadow-lg shadow-indigo-500/30">
             <Kanban className="h-6 w-6 text-white" />
           </div>
           <h2 className="mt-4 text-2xl font-bold text-white">Create Account</h2>
@@ -43,6 +57,16 @@ export default function RegisterPage() {
             {error}
           </div>
         )}
+
+        <GoogleSignInButton onError={setError} text="signup_with" />
+
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-slate-800" />
+          <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
+            or sign up with email
+          </span>
+          <div className="h-px flex-1 bg-slate-800" />
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -74,6 +98,30 @@ export default function RegisterPage() {
           </div>
 
           <div>
+            <label className="block text-xs font-semibold text-slate-300">Profile Image (URL)</label>
+            <div className="relative mt-1.5">
+              <Link2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              <input
+                name="avatar"
+                type="url"
+                value={avatarUrl}
+                onChange={(e) => setAvatarUrl(e.target.value)}
+                placeholder="https://example.com/avatar.jpg"
+                className="w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 pl-9 pr-4 text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+              />
+              {avatarPreview && (
+                <Image
+                  width={22}
+                  height={22}
+                  src={avatarPreview}
+                  alt="Profile preview"
+                  className="absolute right-3 top-1/2 h-5.5 w-5.5 -translate-y-1/2 rounded-full object-cover ring-1 ring-slate-700"
+                />
+              )}
+            </div>
+          </div>
+
+          <div>
             <label className="block text-xs font-semibold text-slate-300">Password *</label>
             <div className="relative mt-1.5">
               <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
@@ -81,6 +129,22 @@ export default function RegisterPage() {
                 name="password"
                 type="password"
                 required
+                minLength={8}
+                placeholder="••••••••"
+                className="w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 pl-9 pr-4 text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-300">Confirm Password *</label>
+            <div className="relative mt-1.5">
+              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              <input
+                name="confirmPassword"
+                type="password"
+                required
+                minLength={8}
                 placeholder="••••••••"
                 className="w-full rounded-xl border border-slate-800 bg-slate-950/70 py-2.5 pl-9 pr-4 text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
               />

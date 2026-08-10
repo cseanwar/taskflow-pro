@@ -63,6 +63,7 @@ export interface ITaskAttachment {
 export interface ITask {
   _id: string;
   projectId: string;
+  key?: string; // Sequential per-project key, e.g. "TF-1"
   columnId: string; // backlog, todo, in_progress, review, testing, done
   sprintId?: string | null;
   title: string;
@@ -105,6 +106,24 @@ export interface IComment {
   createdAt: string;
 }
 
+export interface IActivityLog {
+  _id: string;
+  projectId?: string | null;
+  taskId?: string | null;
+  actorId: string;
+  actor?: {
+    name: string;
+    avatar?: string;
+  };
+  action: string;
+  details?: string;
+  project?: {
+    name: string;
+    code?: string;
+  } | null;
+  createdAt: string;
+}
+
 export interface IDashboardStats {
   activeWorkspaces: number;
   activeProjects: number;
@@ -115,4 +134,43 @@ export interface IDashboardStats {
   completionRate: number;
   priorityStats: { priority: string; count: number }[];
   statusStats: { status: string; count: number }[];
+}
+
+export interface IRecentProject {
+  _id: string;
+  name: string;
+  code: string;
+  category?: string;
+  description?: string;
+  progress: number;
+  totalTasks: number;
+  openTasks: number;
+  nextDueDate?: string | null;
+  daysLeft?: number | null;
+  updatedAt?: string;
+}
+
+export interface IUpcomingTask {
+  _id: string;
+  key?: string;
+  title: string;
+  priority: TaskPriority;
+  columnId: string;
+  dueDate?: string | null;
+  dueLabel?: string;
+  projectId: string;
+  projectName: string;
+  projectCode: string;
+}
+
+export interface IUserDashboard {
+  activeProjects: number;
+  totalTasks: number;
+  completedTasks: number;
+  completionRate: number;
+  tasksDueToday: number;
+  assignedTasks: number;
+  recentProjects: IRecentProject[];
+  upcomingTasks: IUpcomingTask[];
+  recentActivity: IActivityLog[];
 }

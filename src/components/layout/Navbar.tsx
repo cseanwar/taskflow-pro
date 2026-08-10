@@ -1,21 +1,22 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { 
-  Bell, 
-  Search, 
-  Plus, 
-  User, 
-  LogOut, 
-  CheckCircle, 
+import React, { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  Bell,
+  Search,
+  Plus,
+  User,
+  LogOut,
+  CheckCircle,
   Kanban,
   Layers,
-  ChevronDown
-} from 'lucide-react';
-import { logoutAction } from '@/actions/auth.actions';
-import { IUser } from '@/types';
+  ChevronDown,
+} from "lucide-react";
+import { logoutAction } from "@/actions/auth.actions";
+import { IUser } from "@/types";
+import Image from "next/image";
 
 interface NavbarProps {
   user: IUser | null;
@@ -24,7 +25,12 @@ interface NavbarProps {
   onOpenCreateWorkspace?: () => void;
 }
 
-export default function Navbar({ user, onOpenCreateTask, onOpenCreateProject, onOpenCreateWorkspace }: NavbarProps) {
+export default function Navbar({
+  user,
+  onOpenCreateTask,
+  onOpenCreateProject,
+  onOpenCreateWorkspace,
+}: NavbarProps) {
   const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -32,7 +38,7 @@ export default function Navbar({ user, onOpenCreateTask, onOpenCreateProject, on
 
   const handleLogout = async () => {
     await logoutAction();
-    router.push('/login');
+    router.push("/login");
   };
 
   return (
@@ -40,10 +46,10 @@ export default function Navbar({ user, onOpenCreateTask, onOpenCreateProject, on
       {/* Brand & Search */}
       <div className="flex items-center gap-6">
         <Link href="/dashboard" className="flex items-center gap-3.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 shadow-lg shadow-indigo-500/30">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-tr from-indigo-600 to-violet-500 shadow-lg shadow-indigo-500/30">
             <Kanban className="h-5 w-5 text-white" />
           </div>
-          <span className="bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-xl font-bold tracking-tight text-transparent">
+          <span className="bg-linear-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-xl font-bold tracking-tight text-transparent">
             TaskFlow <span className="text-indigo-400">Pro</span>
           </span>
         </Link>
@@ -117,7 +123,9 @@ export default function Navbar({ user, onOpenCreateTask, onOpenCreateProject, on
           {showNotifications && (
             <div className="absolute right-0 mt-2 w-80 rounded-xl border border-slate-800 bg-slate-900 p-4 shadow-2xl z-50">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-                <h4 className="text-xs font-semibold text-slate-200">Notifications</h4>
+                <h4 className="text-xs font-semibold text-slate-200">
+                  Notifications
+                </h4>
                 <span className="rounded bg-indigo-500/10 px-2 py-0.5 text-[10px] font-medium text-indigo-400">
                   3 New
                 </span>
@@ -125,13 +133,21 @@ export default function Navbar({ user, onOpenCreateTask, onOpenCreateProject, on
               <div className="mt-3 space-y-2.5 max-h-64 overflow-y-auto">
                 <div className="rounded-lg border border-slate-800/80 bg-slate-950/50 p-2.5 text-xs">
                   <p className="font-medium text-slate-200">Task Assigned</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">You were assigned to "Setup Authentication System"</p>
-                  <span className="text-[10px] text-slate-500 mt-1 block">10 mins ago</span>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    You were assigned to "Setup Authentication System"
+                  </p>
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    10 mins ago
+                  </span>
                 </div>
                 <div className="rounded-lg border border-slate-800/80 bg-slate-950/50 p-2.5 text-xs">
                   <p className="font-medium text-slate-200">Sprint Started</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Sprint 4 is now active</p>
-                  <span className="text-[10px] text-slate-500 mt-1 block">1 hour ago</span>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Sprint 4 is now active
+                  </p>
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    1 hour ago
+                  </span>
                 </div>
               </div>
             </div>
@@ -145,14 +161,23 @@ export default function Navbar({ user, onOpenCreateTask, onOpenCreateProject, on
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center gap-2.5 rounded-lg border border-slate-800 bg-slate-950/60 p-1.5 pr-3 text-left transition hover:border-slate-700"
             >
-              <img
-                src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
+              <Image
+                width={20}
+                height={20}
+                src={
+                  user.avatar ||
+                  `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`
+                }
                 alt={user.name}
                 className="h-7 w-7 rounded-full bg-slate-800 object-cover"
               />
               <div className="hidden sm:block">
-                <p className="text-xs font-semibold text-slate-200">{user.name}</p>
-                <p className="text-[10px] text-indigo-400 font-medium">{user.role}</p>
+                <p className="text-xs font-semibold text-slate-200">
+                  {user.name}
+                </p>
+                <p className="text-[10px] text-indigo-400 font-medium">
+                  {user.role}
+                </p>
               </div>
               <ChevronDown className="h-3 w-3 text-slate-400" />
             </button>
@@ -160,8 +185,12 @@ export default function Navbar({ user, onOpenCreateTask, onOpenCreateProject, on
             {showUserMenu && (
               <div className="absolute right-0 mt-2 w-52 rounded-xl border border-slate-800 bg-slate-900 p-1.5 shadow-2xl z-50">
                 <div className="border-b border-slate-800 px-3 py-2">
-                  <p className="text-xs font-semibold text-slate-200">{user.name}</p>
-                  <p className="text-[11px] text-slate-400 truncate">{user.email}</p>
+                  <p className="text-xs font-semibold text-slate-200">
+                    {user.name}
+                  </p>
+                  <p className="text-[11px] text-slate-400 truncate">
+                    {user.email}
+                  </p>
                 </div>
                 <div className="py-1">
                   <Link

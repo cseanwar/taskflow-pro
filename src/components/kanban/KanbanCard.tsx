@@ -44,13 +44,20 @@ export default function KanbanCard({ task, index, onClick }: KanbanCardProps) {
         >
           {/* Priority & Code */}
           <div className="flex items-center justify-between gap-2">
-            <span
-              className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${getPriorityBadgeClass(
-                task.priority
-              )}`}
-            >
-              {task.priority}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span
+                className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${getPriorityBadgeClass(
+                  task.priority
+                )}`}
+              >
+                {task.priority}
+              </span>
+              {task.key && (
+                <span className="rounded bg-slate-800/80 px-1.5 py-0.5 text-[9px] font-mono font-semibold tracking-wide text-slate-500">
+                  {task.key}
+                </span>
+              )}
+            </div>
             {task.labels && task.labels.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {task.labels.slice(0, 2).map((label, idx) => (
