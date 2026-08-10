@@ -1,0 +1,189 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { DragDropContext, DropResult } from '@hello-pangea/dnd';
+import { Filter, Search, Plus, Layers, Calendar, BarChart2 } from 'lucide-react';
+import KanbanColumn from './KanbanColumn';
+import TaskDetailDrawer from './TaskDetailDrawer';
+import CreateTaskModal from '../modals/CreateTaskModal';
+import { moveTaskAction, getTasksByProjectAction } from '@/actions/task.actions';
+import { ITask, ISprint, IProject } from '@/types';
+
+interface KanbanBoardProps {
+  project: IProject;
+  initialTasks: ITask[];
+  sprints?: ISprint[];
+}
+
+export default function KanbanBoard({ project, initialTasks, sprints = [] }: KanbanBoardProps) {
+  const [tasks, setTasks] = useState<ITask[]>(initialTasks);
+  const [selectedTask, setSelectedTask] = useState<ITask | null>(null);
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [defaultColumn, setDefaultColumn] = useState('todo');
+
+  // Filters
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSprint, setSelectedSprint] = useState('all');
+  const [selectedPriority, setSelectedPriority] = useState('all');
+
+  useEffect(() => {
+    setTasks(initialTasks);
+  }, [initialTasks]);
+
+  const refreshTasks = async () => {
+    const res = await getTasksByProjectAction(project._id);
+    setTasks(res);
+  };
+
+  const handleDragEnd = async (result: DropResult) => {
+    const { destination, source, draggableId } = result;
+    if (!destination) return;
+    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+
+    // Optimistic UI update
+    const updatedTasks = Array.from(tasks);
+    const draggedTaskIndex = updatedTasks.findIndex(t => t._id === draggableId);
+    if (draggedTaskIndex === -1) return;
+
+    const [movedTask] = updatedTasks.splice(draggedTaskIndex, 1);
+    movedTask.columnId = destination.droppableId;
+    movedTask.order = destination.index;
+
+    updatedTasks.splice(destination.index, 0, movedTask);
+    setTasks(updatedTasks);
+
+    // Call Server Action
+    await moveTaskAction(draggableId, project._id, destination.droppableId, destination.index);
+  };
+
+  // Filter tasks based on search & selectors
+  const filteredTasks = tasks.filter(task => {
+    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSprint =
+      selectedSprint === 'all' ||
+      (selectedSprint === 'none' ? !task.sprintId : task.sprintId === selectedSprint);
+    const matchesPriority = selectedPriority === 'all' || task.priority === selectedPriority;
+
+    return matchesSearch && matchesSprint && matchesPriority;
+  });
+
+  const columns = [
+    { id: 'backlog', title: 'Backlog' },
+    { id: 'todo', title: 'To Do' },
+    { id: 'in_progress', title: 'In Progress' },
+    { id: 'review', title: 'Review' },
+    { id: 'testing', title: 'Testing' },
+    { id: 'done', title: 'Done' },
+  ];
+
+  return (
+    <div className="flex flex-col flex-1 h-full overflow-hidden">
+      {/* Board Header & Filtering Controls */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 bg-slate-900/60 p-4 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600/20 text-indigo-400 font-bold border border-indigo-500/30">
+            {project.code || 'PRJ'}
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-slate-100">{project.name} Board</h2>
+            <p className="text-[11px] text-slate-400">{filteredTasks.length} Total Tasks</p>
+          </div>
+        </div>
+
+        {/* Filter Controls */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="relative w-48">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+            <input
+              type="text"
+              placeholder="Filter tasks..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full rounded-xl border border-slate-800 bg-slate-950/70 py-1.5 pl-8 pr-3 text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+            />
+          </div>
+
+          <select
+            value={selectedSprint}
+            onChange={e => setSelectedSprint(e.target.value)}
+            className="rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-xs font-medium text-slate-300 focus:border-indigo-500 focus:outline-none"
+          >
+            <option value="all">All Sprints</option>
+            <option value="none">Backlog (No Sprint)</option>
+            {sprints.map(s => (
+              <option key={s._id} value={s._id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={selectedPriority}
+            onChange={e => setSelectedPriority(e.target.value)}
+            className="rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-xs font-medium text-slate-300 focus:border-indigo-500 focus:outline-none"
+          >
+            <option value="all">All Priorities</option>
+            <option value="Urgent">Urgent</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+
+          <button
+            onClick={() => {
+              setDefaultColumn('todo');
+              setIsCreateTaskOpen(true);
+            }}
+            className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-500 shadow-md shadow-indigo-600/20"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Create Task</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Drag and Drop Kanban Board Area */}
+      <div className="flex-1 overflow-x-auto p-4">
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="flex gap-4 min-w-max pb-4">
+            {columns.map(col => (
+              <KanbanColumn
+                key={col.id}
+                id={col.id}
+                title={col.title}
+                tasks={filteredTasks.filter(t => t.columnId === col.id)}
+                onAddTask={colId => {
+                  setDefaultColumn(colId);
+                  setIsCreateTaskOpen(true);
+                }}
+                onSelectTask={task => setSelectedTask(task)}
+              />
+            ))}
+          </div>
+        </DragDropContext>
+      </div>
+
+      {/* Task Details Drawer */}
+      {selectedTask && (
+        <TaskDetailDrawer
+          task={selectedTask}
+          projectId={project._id}
+          sprints={sprints}
+          onClose={() => setSelectedTask(null)}
+          onUpdateSuccess={refreshTasks}
+        />
+      )}
+
+      {/* Create Task Modal */}
+      {isCreateTaskOpen && (
+        <CreateTaskModal
+          isOpen={isCreateTaskOpen}
+          onClose={() => setIsCreateTaskOpen(false)}
+          projectId={project._id}
+          sprints={sprints}
+          onSuccess={refreshTasks}
+        />
+      )}
+    </div>
+  );
+}
