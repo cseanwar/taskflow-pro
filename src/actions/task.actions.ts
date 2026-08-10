@@ -24,6 +24,7 @@ export async function createTaskAction(payload: {
   title: string;
   description?: string;
   priority?: string;
+  estimate?: number | null;
   dueDate?: string | null;
   assigneeIds?: string[];
   labels?: string[];

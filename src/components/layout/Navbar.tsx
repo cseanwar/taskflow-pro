@@ -59,7 +59,12 @@ export default function Navbar({
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search projects, tasks, members..."
+            placeholder="Search projects, tasks, members... (Enter)"
+            onKeyDown={e => {
+              if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
+                router.push(`/search?q=${encodeURIComponent((e.target as HTMLInputElement).value.trim())}`);
+              }
+            }}
             className="w-full rounded-lg border border-slate-800 bg-slate-950/60 py-1.5 pl-9 pr-4 text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
         </div>

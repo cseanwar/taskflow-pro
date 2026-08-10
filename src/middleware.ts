@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const protectedPaths = ['/dashboard', '/workspaces', '/projects', '/calendar', '/reports'];
+const protectedPaths = ['/dashboard', '/workspaces', '/projects', '/calendar', '/reports', '/search'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -32,6 +32,7 @@ export const config = {
     '/projects/:path*',
     '/calendar/:path*',
     '/reports/:path*',
+    '/search/:path*',
     '/login',
     '/register',
   ],

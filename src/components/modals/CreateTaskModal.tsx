@@ -52,9 +52,11 @@ export default function CreateTaskModal({ isOpen, onClose, projectId, sprints = 
     const columnId = formData.get('columnId') as string;
     const sprintId = formData.get('sprintId') as string;
     const dueDate = formData.get('dueDate') as string;
+    const estimateRaw = formData.get('estimate') as string;
     const labelInput = formData.get('labels') as string;
 
     const labels = labelInput ? labelInput.split(',').map(l => l.trim()).filter(Boolean) : [];
+    const estimate = estimateRaw && !isNaN(Number(estimateRaw)) ? Number(estimateRaw) : null;
 
     const result = await createTaskAction({
       projectId,
@@ -63,6 +65,7 @@ export default function CreateTaskModal({ isOpen, onClose, projectId, sprints = 
       priority,
       columnId: columnId || 'todo',
       sprintId: sprintId && sprintId !== 'none' ? sprintId : null,
+      estimate,
       dueDate: dueDate || null,
       labels,
       attachments,
@@ -156,13 +159,25 @@ export default function CreateTaskModal({ isOpen, onClose, projectId, sprints = 
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-300">Due Date</label>
+              <label className="block text-xs font-semibold text-slate-300">Story Points (Estimate)</label>
               <input
-                name="dueDate"
-                type="date"
-                className="mt-1.5 w-full rounded-xl border border-slate-800 bg-slate-950/70 px-3.5 py-2 text-xs text-slate-200 focus:border-indigo-500 focus:outline-none"
+                name="estimate"
+                type="number"
+                min={0}
+                max={100}
+                placeholder="e.g. 5"
+                className="mt-1.5 w-full rounded-xl border border-slate-800 bg-slate-950/70 px-3.5 py-2 text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-300">Due Date</label>
+            <input
+              name="dueDate"
+              type="date"
+              className="mt-1.5 w-full rounded-xl border border-slate-800 bg-slate-950/70 px-3.5 py-2 text-xs text-slate-200 focus:border-indigo-500 focus:outline-none"
+            />
           </div>
 
           <div>

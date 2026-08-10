@@ -69,6 +69,7 @@ export interface ITask {
   title: string;
   description?: string;
   priority: TaskPriority;
+  estimate?: number | null; // Story points
   dueDate?: string | null;
   assigneeIds: string[];
   assignees?: Partial<IUser>[];
@@ -78,6 +79,7 @@ export interface ITask {
   attachments?: ITaskAttachment[];
   checklist?: IChecklistItem[];
   order: number;
+  completedAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -173,4 +175,100 @@ export interface IUserDashboard {
   recentProjects: IRecentProject[];
   upcomingTasks: IUpcomingTask[];
   recentActivity: IActivityLog[];
+}
+
+export interface IReportProject {
+  _id: string;
+  name: string;
+  code: string;
+  category?: string;
+  status: string;
+  workspaceId: string;
+  workspaceName: string;
+}
+
+export interface IVelocityEntry {
+  sprintId: string;
+  name: string;
+  status: string;
+  committed: number;
+  completed: number;
+  committedPoints: number;
+  completedPoints: number;
+}
+
+export interface ITeamWorkloadMember {
+  userId: string;
+  name: string;
+  avatar?: string;
+  totalTasks: number;
+  completedTasks: number;
+  openTasks: number;
+  byColumn: Record<string, number>;
+  progress: number;
+  capacity: number;
+  workloadPercent: number;
+  allocation: 'over' | 'high' | 'under' | 'ok';
+}
+
+export interface ITeamProductivityMember {
+  userId: string;
+  name: string;
+  avatar?: string;
+  completedFeatures: number;
+  completedBugs: number;
+  openFeatures: number;
+  openBugs: number;
+  totalCompleted: number;
+  totalOpen: number;
+  completionRate: number;
+}
+
+export interface IProjectOverview {
+  projectId: string;
+  totalTasks: number;
+  completedTasks: number;
+  openTasks: number;
+  completionRate: number;
+  tasksDueSoon: number;
+  statusStats: Record<string, number>;
+  velocity: IVelocityEntry[];
+  teamWorkload: ITeamWorkloadMember[];
+  teamProductivity: ITeamProductivityMember[];
+  cycleTimeDays: number;
+  activeSprint: { id: string; name: string; startDate?: string | null; endDate?: string | null } | null;
+  timeRemainingDays: number | null;
+  timeRemainingLabel: string | null;
+  recentActivity: IActivityLog[];
+}
+
+export interface ISearchResults {
+  tasks: {
+    _id: string;
+    key?: string;
+    title: string;
+    priority: TaskPriority;
+    columnId: string;
+    sprintId?: string | null;
+    dueDate?: string | null;
+    estimate?: number | null;
+    projectId: string;
+    projectName: string;
+    projectCode: string;
+    assigneeIds: string[];
+  }[];
+  projects: {
+    _id: string;
+    name: string;
+    code: string;
+    category?: string;
+    status: string;
+  }[];
+  members: {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+    role: string;
+  }[];
 }

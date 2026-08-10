@@ -173,7 +173,7 @@ export default function TaskDetailDrawer({ task, projectId, sprints = [], member
           </div>
 
           {/* Quick Properties Bar */}
-          <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-xs">
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-xs">
             <div>
               <span className="text-slate-500 block mb-1">Priority</span>
               <select
@@ -199,6 +199,22 @@ export default function TaskDetailDrawer({ task, projectId, sprints = [], member
                 {sprints.map(s => (
                   <option key={s._id} value={s._id} className="bg-slate-900">
                     {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <span className="text-slate-500 block mb-1">Estimate</span>
+              <select
+                value={task.estimate ?? ''}
+                onChange={e => handleUpdateField('estimate', e.target.value === '' ? null : Number(e.target.value))}
+                className="w-full bg-transparent font-semibold text-slate-200 focus:outline-none"
+              >
+                <option value="" className="bg-slate-900">—</option>
+                {[1, 2, 3, 5, 8, 13, 21].map(v => (
+                  <option key={v} value={v} className="bg-slate-900">
+                    {v} pts
                   </option>
                 ))}
               </select>
