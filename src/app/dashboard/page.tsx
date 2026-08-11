@@ -53,7 +53,7 @@ export default async function DashboardPage() {
       <Navbar user={user} />
 
       <div className="flex flex-1">
-        <Sidebar workspaces={workspaces} activeWorkspace={activeWorkspace} />
+        <Sidebar workspaces={workspaces} activeWorkspace={activeWorkspace} user={user} />
 
         <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
           {/* Header Banner */}

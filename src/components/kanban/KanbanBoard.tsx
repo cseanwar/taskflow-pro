@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { Filter, Search, Plus, Layers, Calendar, BarChart2 } from 'lucide-react';
 import KanbanColumn from './KanbanColumn';
@@ -8,15 +8,22 @@ import TaskDetailDrawer from './TaskDetailDrawer';
 import CreateTaskModal from '../modals/CreateTaskModal';
 import { moveTaskAction, getTasksByProjectAction } from '@/actions/task.actions';
 import { ITask, ISprint, IProject } from '@/types';
+import { ProjectPermissions } from '@/lib/permissions';
 
 interface KanbanBoardProps {
   project: IProject;
   initialTasks: ITask[];
   sprints?: ISprint[];
+  permissions: ProjectPermissions;
 }
 
-export default function KanbanBoard({ project, initialTasks, sprints = [] }: KanbanBoardProps) {
+export default function KanbanBoard({ project, initialTasks, sprints = [], permissions }: KanbanBoardProps) {
   const [tasks, setTasks] = useState<ITask[]>(initialTasks);
+  const [lastTasks, setLastTasks] = useState<ITask[]>(initialTasks);
+  if (initialTasks !== lastTasks) {
+    setLastTasks(initialTasks);
+    setTasks(initialTasks);
+  }
   const [selectedTask, setSelectedTask] = useState<ITask | null>(null);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [defaultColumn, setDefaultColumn] = useState('todo');
@@ -25,10 +32,6 @@ export default function KanbanBoard({ project, initialTasks, sprints = [] }: Kan
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSprint, setSelectedSprint] = useState('all');
   const [selectedPriority, setSelectedPriority] = useState('all');
-
-  useEffect(() => {
-    setTasks(initialTasks);
-  }, [initialTasks]);
 
   const refreshTasks = async () => {
     const res = await getTasksByProjectAction(project._id);
@@ -39,6 +42,7 @@ export default function KanbanBoard({ project, initialTasks, sprints = [] }: Kan
     const { destination, source, draggableId } = result;
     if (!destination) return;
     if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+    if (!permissions.canContribute) return;
 
     // Optimistic UI update
     const updatedTasks = Array.from(tasks);
@@ -90,6 +94,17 @@ export default function KanbanBoard({ project, initialTasks, sprints = [] }: Kan
           </div>
         </div>
 
+        <div className="flex items-center gap-2">
+          {permissions.isGuest && (
+            <span className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[10px] font-bold text-amber-400">
+              View Only
+            </span>
+          )}
+          <span className="rounded-lg border border-slate-700 bg-slate-800/60 px-2 py-1 text-[10px] font-semibold text-slate-400">
+            Level {permissions.level}
+          </span>
+        </div>
+
         {/* Filter Controls */}
         <div className="flex flex-wrap items-center gap-2.5">
           <div className="relative w-48">
@@ -129,16 +144,18 @@ export default function KanbanBoard({ project, initialTasks, sprints = [] }: Kan
             <option value="Low">Low</option>
           </select>
 
-          <button
-            onClick={() => {
-              setDefaultColumn('todo');
-              setIsCreateTaskOpen(true);
-            }}
-            className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-500 shadow-md shadow-indigo-600/20"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Create Task</span>
-          </button>
+          {permissions.canManage && (
+            <button
+              onClick={() => {
+                setDefaultColumn('todo');
+                setIsCreateTaskOpen(true);
+              }}
+              className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-500 shadow-md shadow-indigo-600/20"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Create Task</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -152,6 +169,8 @@ export default function KanbanBoard({ project, initialTasks, sprints = [] }: Kan
                 id={col.id}
                 title={col.title}
                 tasks={filteredTasks.filter(t => t.columnId === col.id)}
+                canAddTask={permissions.canManage}
+                canDrag={permissions.canContribute}
                 onAddTask={colId => {
                   setDefaultColumn(colId);
                   setIsCreateTaskOpen(true);
@@ -169,6 +188,7 @@ export default function KanbanBoard({ project, initialTasks, sprints = [] }: Kan
           task={selectedTask}
           projectId={project._id}
           sprints={sprints}
+          permissions={permissions}
           onClose={() => setSelectedTask(null)}
           onUpdateSuccess={refreshTasks}
         />

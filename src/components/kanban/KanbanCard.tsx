@@ -8,10 +8,11 @@ import { ITask } from '@/types';
 interface KanbanCardProps {
   task: ITask;
   index: number;
+  canDrag?: boolean;
   onClick: () => void;
 }
 
-export default function KanbanCard({ task, index, onClick }: KanbanCardProps) {
+export default function KanbanCard({ task, index, canDrag = true, onClick }: KanbanCardProps) {
   const getPriorityBadgeClass = (priority: string) => {
     switch (priority) {
       case 'Urgent':
@@ -31,7 +32,7 @@ export default function KanbanCard({ task, index, onClick }: KanbanCardProps) {
   const totalChecklist = task.checklist?.length || 0;
 
   return (
-    <Draggable draggableId={task._id} index={index}>
+    <Draggable draggableId={task._id} index={index} isDragDisabled={!canDrag}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}

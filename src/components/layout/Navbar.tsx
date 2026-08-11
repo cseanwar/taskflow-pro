@@ -23,6 +23,10 @@ interface NavbarProps {
   onOpenCreateTask?: () => void;
   onOpenCreateProject?: () => void;
   onOpenCreateWorkspace?: () => void;
+  /** Guests have read-only access and cannot use the quick-create menu. */
+  isGuest?: boolean;
+  /** Restrict "New Project" to users who can actually create projects (PM+). */
+  canCreateProject?: boolean;
 }
 
 export default function Navbar({
@@ -30,6 +34,8 @@ export default function Navbar({
   onOpenCreateTask,
   onOpenCreateProject,
   onOpenCreateWorkspace,
+  isGuest = false,
+  canCreateProject = true,
 }: NavbarProps) {
   const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
@@ -73,7 +79,7 @@ export default function Navbar({
       {/* Right Actions */}
       <div className="flex items-center gap-3">
         {/* Quick Action Button */}
-        {user && (
+        {user && !isGuest && (
           <div className="relative">
             <button
               onClick={() => setShowQuickCreate(!showQuickCreate)}
@@ -98,7 +104,7 @@ export default function Navbar({
                     <span>New Task</span>
                   </button>
                 )}
-                {onOpenCreateProject && (
+                {onOpenCreateProject && canCreateProject && (
                   <button
                     onClick={() => {
                       setShowQuickCreate(false);
@@ -139,7 +145,7 @@ export default function Navbar({
                 <div className="rounded-lg border border-slate-800/80 bg-slate-950/50 p-2.5 text-xs">
                   <p className="font-medium text-slate-200">Task Assigned</p>
                   <p className="text-[11px] text-slate-400 mt-0.5">
-                    You were assigned to "Setup Authentication System"
+                    You were assigned to &quot;Setup Authentication System&quot;
                   </p>
                   <span className="text-[10px] text-slate-500 mt-1 block">
                     10 mins ago

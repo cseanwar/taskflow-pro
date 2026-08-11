@@ -15,12 +15,14 @@ import {
   Plus,
   House,
 } from "lucide-react";
-import { IWorkspace } from "@/types";
+import { IUser, IWorkspace } from "@/types";
 import Image from "next/image";
+import { LEVEL, maxEffectiveLevel } from "@/lib/permissions";
 
 interface SidebarProps {
   workspaces?: IWorkspace[];
   activeWorkspace?: IWorkspace | null;
+  user?: IUser | null;
   onSelectWorkspace?: (workspace: IWorkspace) => void;
   onOpenCreateWorkspace?: () => void;
 }
@@ -28,10 +30,14 @@ interface SidebarProps {
 export default function Sidebar({
   workspaces = [],
   activeWorkspace,
+  user,
   onSelectWorkspace,
   onOpenCreateWorkspace,
 }: SidebarProps) {
   const pathname = usePathname();
+
+  // Reports are reserved for Project Managers, Workspace Owners, and Administrators.
+  const canViewReports = maxEffectiveLevel(user ?? null, workspaces) >= LEVEL.manage;
 
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -44,8 +50,10 @@ export default function Sidebar({
       icon: FolderKanban,
     },
     { name: "Calendar View", href: "/calendar", icon: CalendarIcon },
-    { name: "Analytics & Reports", href: "/reports", icon: BarChart3 },
-  ];
+    ...(canViewReports
+      ? [{ name: "Analytics & Reports", href: "/reports", icon: BarChart3 }]
+      : []),
+  ] as const;
 
   return (
     <aside className="sticky top-16 flex h-[calc(100vh-4rem)] w-64 flex-col border-r border-slate-800 bg-slate-900/60 p-4 backdrop-blur-md">

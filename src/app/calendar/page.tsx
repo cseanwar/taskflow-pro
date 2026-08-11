@@ -58,7 +58,7 @@ export default function CalendarPage() {
       <Navbar user={user} />
 
       <div className="flex flex-1">
-        <Sidebar workspaces={workspaces} activeWorkspace={workspaces[0] || null} />
+        <Sidebar workspaces={workspaces} activeWorkspace={workspaces[0] || null} user={user} />
 
         <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5">

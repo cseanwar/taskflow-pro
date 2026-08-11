@@ -8,7 +8,6 @@ import {
   CheckSquare,
   Folder,
   Layers,
-  Loader2,
   Search,
   Users,
 } from 'lucide-react';
@@ -46,7 +45,6 @@ export default function SearchPageContent() {
   const [workspaces, setWorkspaces] = useState<IWorkspace[]>([]);
   const [query, setQuery] = useState(params.get('q') || '');
   const [results, setResults] = useState<ISearchResults>({ tasks: [], projects: [], members: [] });
-  const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState<TaskFilters>({ columnId: 'all', priority: 'all' });
   const [debouncedQuery, setDebouncedQuery] = useState(query);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -68,13 +66,9 @@ export default function SearchPageContent() {
   useEffect(() => {
     if (!debouncedQuery.trim()) return;
     let cancelled = false;
-    setLoading(true);
     searchAction(debouncedQuery)
       .then(res => {
         if (!cancelled) setResults(res);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
@@ -95,7 +89,7 @@ export default function SearchPageContent() {
       <Navbar user={user} />
 
       <div className="flex flex-1">
-        <Sidebar workspaces={workspaces} activeWorkspace={null} />
+        <Sidebar workspaces={workspaces} activeWorkspace={null} user={user} />
 
         <main className="flex-1 p-6 lg:p-8 overflow-y-auto max-w-4xl">
           <div className="border-b border-slate-800 pb-5">
@@ -115,7 +109,6 @@ export default function SearchPageContent() {
               placeholder="Search tasks, projects, members..."
               className="w-full bg-transparent text-sm text-slate-200 placeholder-slate-500 focus:outline-none"
             />
-            {loading && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-indigo-400" />}
           </div>
 
           {showFilters && (
@@ -154,7 +147,7 @@ export default function SearchPageContent() {
               </p>
             )}
 
-            {debouncedQuery.trim() && totalMatches === 0 && !loading && (
+            {debouncedQuery.trim() && totalMatches === 0 && (
               <p className="py-16 text-center text-sm text-slate-500">
                 No results for &ldquo;{debouncedQuery}&rdquo;.
               </p>

@@ -10,11 +10,21 @@ interface KanbanColumnProps {
   id: string;
   title: string;
   tasks: ITask[];
+  canAddTask?: boolean;
+  canDrag?: boolean;
   onAddTask: (columnId: string) => void;
   onSelectTask: (task: ITask) => void;
 }
 
-export default function KanbanColumn({ id, title, tasks, onAddTask, onSelectTask }: KanbanColumnProps) {
+export default function KanbanColumn({
+  id,
+  title,
+  tasks,
+  canAddTask = true,
+  canDrag = true,
+  onAddTask,
+  onSelectTask,
+}: KanbanColumnProps) {
   const getColumnColor = (columnId: string) => {
     switch (columnId) {
       case 'backlog':
@@ -44,13 +54,15 @@ export default function KanbanColumn({ id, title, tasks, onAddTask, onSelectTask
             {tasks.length}
           </span>
         </div>
-        <button
-          onClick={() => onAddTask(id)}
-          className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-800 hover:text-white"
-          title="Add Task"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
+        {canAddTask && (
+          <button
+            onClick={() => onAddTask(id)}
+            className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+            title="Add Task"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Droppable Task List Container */}
@@ -64,7 +76,7 @@ export default function KanbanColumn({ id, title, tasks, onAddTask, onSelectTask
             }`}
           >
             {tasks.map((task, index) => (
-              <KanbanCard key={task._id} task={task} index={index} onClick={() => onSelectTask(task)} />
+              <KanbanCard key={task._id} task={task} index={index} canDrag={canDrag} onClick={() => onSelectTask(task)} />
             ))}
             {provided.placeholder}
           </div>
@@ -72,13 +84,15 @@ export default function KanbanColumn({ id, title, tasks, onAddTask, onSelectTask
       </Droppable>
 
       {/* Add Task Button at bottom */}
-      <button
-        onClick={() => onAddTask(id)}
-        className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-800 py-2 text-xs font-semibold text-slate-400 transition hover:border-indigo-500/50 hover:bg-indigo-950/30 hover:text-indigo-300"
-      >
-        <Plus className="h-3.5 w-3.5" />
-        <span>Add Task</span>
-      </button>
+      {canAddTask && (
+        <button
+          onClick={() => onAddTask(id)}
+          className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-800 py-2 text-xs font-semibold text-slate-400 transition hover:border-indigo-500/50 hover:bg-indigo-950/30 hover:text-indigo-300"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          <span>Add Task</span>
+        </button>
+      )}
     </div>
   );
 }

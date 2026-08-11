@@ -34,7 +34,7 @@ export default function WorkspacesPage() {
       <Navbar user={user} onOpenCreateWorkspace={() => setIsCreateOpen(true)} />
 
       <div className="flex flex-1">
-        <Sidebar workspaces={workspaces} onOpenCreateWorkspace={() => setIsCreateOpen(true)} />
+        <Sidebar workspaces={workspaces} user={user} onOpenCreateWorkspace={() => setIsCreateOpen(true)} />
 
         <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
           <div className="flex items-center justify-between border-b border-slate-800 pb-5">

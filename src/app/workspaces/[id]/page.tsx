@@ -18,11 +18,13 @@ import {
 } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Sidebar from '@/components/layout/Sidebar';
+import AccessDenied from '@/components/shared/AccessDenied';
 import CreateProjectModal from '@/components/modals/CreateProjectModal';
 import InviteMemberModal from '@/components/modals/InviteMemberModal';
 import { getCurrentUserAction } from '@/actions/auth.actions';
 import { getWorkspaceByIdAction, removeWorkspaceMemberAction } from '@/actions/workspace.actions';
 import { getProjectsByWorkspaceAction, duplicateProjectAction } from '@/actions/project.actions';
+import { effectiveWorkspaceLevel, LEVEL } from '@/lib/permissions';
 import { IWorkspace, IProject, IUser } from '@/types';
 
 export default function WorkspaceDetailPage() {
@@ -83,12 +85,27 @@ export default function WorkspaceDetailPage() {
     );
   }
 
+  // Role resolution: guests get a read-only view; team members can contribute;
+  // only PMs+ can create projects; only owners/admins manage members.
+  const level = user ? effectiveWorkspaceLevel(user, workspace) : 0;
+  const canManage = level >= LEVEL.manage;
+  const canAdmin = level >= LEVEL.admin;
+  const isGuest = level <= LEVEL.read;
+
+  if (!user || level < LEVEL.read) {
+    return <AccessDenied role={user?.role} required="Team Member" />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      <Navbar user={user} onOpenCreateProject={() => setIsProjectModalOpen(true)} />
+      <Navbar
+        user={user}
+        isGuest={isGuest}
+        onOpenCreateProject={canManage ? () => setIsProjectModalOpen(true) : undefined}
+      />
 
       <div className="flex flex-1">
-        <Sidebar workspaces={[workspace]} activeWorkspace={workspace} />
+        <Sidebar workspaces={[workspace]} activeWorkspace={workspace} user={user} />
 
         <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
           {/* Workspace Header */}
@@ -107,20 +124,24 @@ export default function WorkspaceDetailPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setIsInviteModalOpen(true)}
-                  className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/70 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800"
-                >
-                  <UserPlus className="h-4 w-4 text-indigo-400" />
-                  <span>Invite Team</span>
-                </button>
-                <button
-                  onClick={() => setIsProjectModalOpen(true)}
-                  className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500 shadow-md shadow-indigo-600/20"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Create Project</span>
-                </button>
+                {canAdmin && (
+                  <button
+                    onClick={() => setIsInviteModalOpen(true)}
+                    className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/70 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800"
+                  >
+                    <UserPlus className="h-4 w-4 text-indigo-400" />
+                    <span>Invite Team</span>
+                  </button>
+                )}
+                {canManage && (
+                  <button
+                    onClick={() => setIsProjectModalOpen(true)}
+                    className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500 shadow-md shadow-indigo-600/20"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Create Project</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -163,13 +184,15 @@ export default function WorkspaceDetailPage() {
                         {p.code}
                       </span>
                       <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => handleDuplicateProject(p._id)}
-                          className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
-                          title="Duplicate Project"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </button>
+                        {canManage && (
+                          <button
+                            onClick={() => handleDuplicateProject(p._id)}
+                            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+                            title="Duplicate Project"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -199,13 +222,15 @@ export default function WorkspaceDetailPage() {
                   <FolderKanban className="mx-auto h-10 w-10 text-slate-500" />
                   <h3 className="mt-3 text-base font-bold text-slate-200">No Projects Created Yet</h3>
                   <p className="mt-1 text-xs text-slate-400">Create a project to start planning tasks on your Kanban board.</p>
-                  <button
-                    onClick={() => setIsProjectModalOpen(true)}
-                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>Create Project</span>
-                  </button>
+                  {canManage && (
+                    <button
+                      onClick={() => setIsProjectModalOpen(true)}
+                      className="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>Create Project</span>
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -242,7 +267,7 @@ export default function WorkspaceDetailPage() {
                           </span>
                         </td>
                         <td className="py-3 text-right">
-                          {m.role !== 'Workspace Owner' && (
+                          {canAdmin && m.userId !== user?.id && m.role !== 'Workspace Owner' && (
                             <button
                               onClick={() => handleRemoveMember(m.userId)}
                               className="rounded-lg p-1.5 text-rose-400 hover:bg-rose-500/10"

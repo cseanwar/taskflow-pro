@@ -18,50 +18,58 @@ import {
 } from 'lucide-react';
 import { updateTaskAction, deleteTaskAction, getTaskCommentsAction, addCommentAction, getTaskActivityAction } from '@/actions/task.actions';
 import { imageUploadInImgBB } from '@/utilities/ImgUploadInImgBB';
-import { ITask, IComment, IActivityLog, ISprint, IUser } from '@/types';
+import { ITask, IComment, IActivityLog, ISprint, IUser, IChecklistItem, ITaskAttachment } from '@/types';
+import { ProjectPermissions } from '@/lib/permissions';
 
 interface Props {
   task: ITask | null;
   projectId: string;
   sprints?: ISprint[];
   members?: Partial<IUser>[];
+  permissions?: ProjectPermissions;
   onClose: () => void;
   onUpdateSuccess?: () => void;
 }
 
-export default function TaskDetailDrawer({ task, projectId, sprints = [], members = [], onClose, onUpdateSuccess }: Props) {
+export default function TaskDetailDrawer({ task, projectId, sprints = [], members = [], permissions, onClose, onUpdateSuccess }: Props) {
+  // Guests see a read-only view. Team Members+ can edit, comment, and move.
+  const editable = permissions?.canContribute ?? true;
+  const canDelete = permissions?.canManage ?? true;
   const [comments, setComments] = useState<IComment[]>([]);
   const [activity, setActivity] = useState<IActivityLog[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loadingComment, setLoadingComment] = useState(false);
   const [checklist, setChecklist] = useState(task?.checklist || []);
+  const [lastTaskId, setLastTaskId] = useState<string | undefined>(task?._id);
+  if (task && task._id !== lastTaskId) {
+    setLastTaskId(task._id);
+    setChecklist(task.checklist || []);
+  }
   const [newItemText, setNewItemText] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  const fetchComments = async () => {
-    if (!task) return;
-    const res = await getTaskCommentsAction(task._id);
-    setComments(res);
-  };
-
-  const fetchActivity = async () => {
-    if (!task) return;
-    const res = await getTaskActivityAction(task._id);
-    setActivity(res);
-  };
-
   useEffect(() => {
-    if (task) {
-      setChecklist(task.checklist || []);
-      fetchComments();
-      fetchActivity();
-    }
+    if (!task) return;
+    let cancelled = false;
+    (async () => {
+      const [commentsResult, activityResult] = await Promise.all([
+        getTaskCommentsAction(task._id),
+        getTaskActivityAction(task._id),
+      ]);
+      if (!cancelled) {
+        setComments(commentsResult);
+        setActivity(activityResult);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [task]);
 
   if (!task) return null;
 
-  const handleUpdateField = async (field: string, value: any) => {
+  const handleUpdateField = async (field: string, value: string | number | boolean | null | IChecklistItem[] | ITaskAttachment[]) => {
     await updateTaskAction(task._id, projectId, { [field]: value });
     if (onUpdateSuccess) onUpdateSuccess();
   };
@@ -92,7 +100,7 @@ export default function TaskDetailDrawer({ task, projectId, sprints = [], member
     setLoadingComment(false);
     if (res.success) {
       setNewComment('');
-      fetchComments();
+      getTaskCommentsAction(task._id).then(setComments);
     }
   };
 
@@ -137,7 +145,8 @@ export default function TaskDetailDrawer({ task, projectId, sprints = [], member
               <select
                 value={task.columnId}
                 onChange={e => handleUpdateField('columnId', e.target.value)}
-                className="rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1 text-xs font-semibold text-slate-200 focus:outline-none"
+                disabled={!editable}
+                className="rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1 text-xs font-semibold text-slate-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <option value="backlog">Backlog</option>
                 <option value="todo">To Do</option>
@@ -148,14 +157,16 @@ export default function TaskDetailDrawer({ task, projectId, sprints = [], member
               </select>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={handleDeleteTask}
-                disabled={deleting}
-                className="rounded-lg p-1.5 text-rose-400 transition hover:bg-rose-500/10"
-                title="Delete Task"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+              {canDelete && (
+                <button
+                  onClick={handleDeleteTask}
+                  disabled={deleting}
+                  className="rounded-lg p-1.5 text-rose-400 transition hover:bg-rose-500/10"
+                  title="Delete Task"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
               <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white">
                 <X className="h-5 w-5" />
               </button>
@@ -167,10 +178,17 @@ export default function TaskDetailDrawer({ task, projectId, sprints = [], member
             <input
               type="text"
               defaultValue={task.title}
-              onBlur={e => handleUpdateField('title', e.target.value)}
-              className="w-full bg-transparent text-lg font-bold text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded px-1.5 py-1"
+              readOnly={!editable}
+              onBlur={e => { if (editable) handleUpdateField('title', e.target.value); }}
+              className="w-full bg-transparent text-lg font-bold text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded px-1.5 py-1 disabled:opacity-80"
             />
           </div>
+
+          {!editable && (
+            <p className="mt-1 text-[11px] text-amber-400/90">
+              Read-only view — guests cannot modify tasks.
+            </p>
+          )}
 
           {/* Quick Properties Bar */}
           <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-xs">
@@ -179,7 +197,8 @@ export default function TaskDetailDrawer({ task, projectId, sprints = [], member
               <select
                 value={task.priority}
                 onChange={e => handleUpdateField('priority', e.target.value)}
-                className="w-full bg-transparent font-semibold text-slate-200 focus:outline-none"
+                disabled={!editable}
+                className="w-full bg-transparent font-semibold text-slate-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <option value="Low" className="bg-slate-900">Low</option>
                 <option value="Medium" className="bg-slate-900">Medium</option>
@@ -193,7 +212,8 @@ export default function TaskDetailDrawer({ task, projectId, sprints = [], member
               <select
                 value={task.sprintId || 'none'}
                 onChange={e => handleUpdateField('sprintId', e.target.value === 'none' ? null : e.target.value)}
-                className="w-full bg-transparent font-semibold text-slate-200 focus:outline-none"
+                disabled={!editable}
+                className="w-full bg-transparent font-semibold text-slate-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <option value="none" className="bg-slate-900">Backlog</option>
                 {sprints.map(s => (
@@ -209,7 +229,8 @@ export default function TaskDetailDrawer({ task, projectId, sprints = [], member
               <select
                 value={task.estimate ?? ''}
                 onChange={e => handleUpdateField('estimate', e.target.value === '' ? null : Number(e.target.value))}
-                className="w-full bg-transparent font-semibold text-slate-200 focus:outline-none"
+                disabled={!editable}
+                className="w-full bg-transparent font-semibold text-slate-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <option value="" className="bg-slate-900">—</option>
                 {[1, 2, 3, 5, 8, 13, 21].map(v => (
@@ -226,7 +247,8 @@ export default function TaskDetailDrawer({ task, projectId, sprints = [], member
                 type="date"
                 defaultValue={task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ''}
                 onChange={e => handleUpdateField('dueDate', e.target.value || null)}
-                className="w-full bg-transparent font-semibold text-slate-200 focus:outline-none"
+                disabled={!editable}
+                className="w-full bg-transparent font-semibold text-slate-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
               />
             </div>
           </div>
@@ -236,10 +258,11 @@ export default function TaskDetailDrawer({ task, projectId, sprints = [], member
             <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Description</h4>
             <textarea
               defaultValue={task.description || ''}
-              onBlur={e => handleUpdateField('description', e.target.value)}
+              readOnly={!editable}
+              onBlur={e => { if (editable) handleUpdateField('description', e.target.value); }}
               rows={3}
-              placeholder="Add detailed task description..."
-              className="w-full rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+              placeholder={editable ? 'Add detailed task description...' : 'No description provided.'}
+              className="w-full rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
             />
           </div>
 
@@ -259,7 +282,8 @@ export default function TaskDetailDrawer({ task, projectId, sprints = [], member
                     type="checkbox"
                     checked={item.completed}
                     onChange={() => handleToggleChecklist(item.id)}
-                    className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-0"
+                    disabled={!editable}
+                    className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   <span className={`flex-1 text-slate-200 ${item.completed ? 'line-through text-slate-500' : ''}`}>
                     {item.text}
@@ -268,33 +292,37 @@ export default function TaskDetailDrawer({ task, projectId, sprints = [], member
               ))}
             </div>
 
-            <form onSubmit={handleAddChecklistItem} className="mt-2 flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Add checklist item..."
-                value={newItemText}
-                onChange={e => setNewItemText(e.target.value)}
-                className="flex-1 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="flex items-center gap-1 rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>Add</span>
-              </button>
-            </form>
+            {editable && (
+              <form onSubmit={handleAddChecklistItem} className="mt-2 flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Add checklist item..."
+                  value={newItemText}
+                  onChange={e => setNewItemText(e.target.value)}
+                  className="flex-1 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="flex items-center gap-1 rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>Add</span>
+                </button>
+              </form>
+            )}
           </div>
 
           {/* Attachments Section */}
           <div className="mt-6">
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Attachments</h4>
-              <label className="flex cursor-pointer items-center gap-1 rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1 text-[11px] font-semibold text-slate-300 hover:bg-slate-800">
-                {uploadingImage ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3 text-indigo-400" />}
-                <span>Upload ImgBB</span>
-                <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
-              </label>
+              {editable && (
+                <label className="flex cursor-pointer items-center gap-1 rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1 text-[11px] font-semibold text-slate-300 hover:bg-slate-800">
+                  {uploadingImage ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3 text-indigo-400" />}
+                  <span>Upload ImgBB</span>
+                  <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+                </label>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -369,22 +397,26 @@ export default function TaskDetailDrawer({ task, projectId, sprints = [], member
             </div>
 
             {/* Comment Form */}
-            <form onSubmit={handleAddComment} className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Write a comment..."
-                value={newComment}
-                onChange={e => setNewComment(e.target.value)}
-                className="flex-1 rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-xs text-slate-200 focus:border-indigo-500 focus:outline-none"
-              />
-              <button
-                type="submit"
-                disabled={loadingComment}
-                className="flex items-center justify-center rounded-xl bg-indigo-600 p-2 text-white hover:bg-indigo-500 disabled:opacity-50"
-              >
-                {loadingComment ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              </button>
-            </form>
+            {editable ? (
+              <form onSubmit={handleAddComment} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Write a comment..."
+                  value={newComment}
+                  onChange={e => setNewComment(e.target.value)}
+                  className="flex-1 rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-xs text-slate-200 focus:border-indigo-500 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={loadingComment}
+                  className="flex items-center justify-center rounded-xl bg-indigo-600 p-2 text-white hover:bg-indigo-500 disabled:opacity-50"
+                >
+                  {loadingComment ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </button>
+              </form>
+            ) : (
+              <p className="text-[11px] text-slate-500">Guests can view comments but cannot post.</p>
+            )}
           </div>
         </div>
       </div>
