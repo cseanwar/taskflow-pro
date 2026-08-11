@@ -22,6 +22,7 @@ import {
   UserPlus,
   ArrowRight,
   Loader2,
+  Menu,
 } from "lucide-react";
 import { logoutAction } from "@/actions/auth.actions";
 import {
@@ -129,20 +130,29 @@ export default function Navbar({
   const unreadInList = notifications.filter(n => !n.read).length;
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-800 bg-slate-900/80 px-6 backdrop-blur-md">
+    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-800 bg-slate-900/80 px-4 backdrop-blur-md sm:px-6">
       {/* Brand & Search */}
-      <div className="flex items-center gap-6">
-        <Link href="/dashboard" className="flex items-center gap-3.5">
+      <div className="flex min-w-0 items-center gap-3 lg:gap-6">
+        {/* Mobile nav trigger */}
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent("tfp:toggle-sidebar"))}
+          aria-label="Open navigation menu"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-800 bg-slate-950/60 text-slate-300 transition hover:border-slate-700 hover:text-white lg:hidden"
+        >
+          <Menu className="h-4 w-4" />
+        </button>
+
+        <Link href="/dashboard" className="flex shrink-0 items-center gap-3.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-tr from-indigo-600 to-violet-500 shadow-lg shadow-indigo-500/30">
             <Kanban className="h-5 w-5 text-white" />
           </div>
-          <span className="bg-linear-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-xl font-bold tracking-tight text-transparent">
+          <span className="hidden bg-linear-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-xl font-bold tracking-tight text-transparent sm:inline">
             TaskFlow <span className="text-indigo-400">Pro</span>
           </span>
         </Link>
 
         {/* Global Search Bar */}
-        <div className="relative hidden md:block w-72">
+        <div className="relative hidden lg:block w-64 xl:w-72">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <button
             onClick={() => window.dispatchEvent(new CustomEvent("tfp:open-command"))}
@@ -157,7 +167,7 @@ export default function Navbar({
       </div>
 
       {/* Right Actions */}
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         {/* Theme toggle */}
         <ThemeToggle />
         {/* Quick Action Button */}
@@ -165,11 +175,11 @@ export default function Navbar({
           <div className="relative">
             <button
               onClick={() => setShowQuickCreate(!showQuickCreate)}
-              className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-500 shadow-md shadow-indigo-600/20"
+              className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-500 shadow-md shadow-indigo-600/20 sm:px-3.5"
             >
               <Plus className="h-4 w-4" />
-              <span>Create</span>
-              <ChevronDown className="h-3 w-3 opacity-70" />
+              <span className="hidden sm:inline">Create</span>
+              <ChevronDown className="hidden h-3 w-3 opacity-70 sm:inline" />
             </button>
 
             {showQuickCreate && (
@@ -221,7 +231,7 @@ export default function Navbar({
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-[22rem] overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl z-50">
+            <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-[22rem] overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl z-50 sm:w-[22rem]">
               <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/40 px-4 py-3">
                 <div className="flex items-center gap-2">
                   <h4 className="text-xs font-bold text-slate-100">

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, type MouseEvent as ReactMouseEvent } from "react";
 import {
   LayoutDashboard,
   FolderKanban,
@@ -15,6 +16,7 @@ import {
   Plus,
   House,
   Command,
+  X,
 } from "lucide-react";
 import { IUser, IWorkspace } from "@/types";
 import Image from "next/image";
@@ -37,6 +39,33 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+
+  // Mobile drawer state, toggled from the Navbar's hamburger via a custom event.
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const onToggle = () => setOpen(o => !o);
+    const onClose = () => setOpen(false);
+    window.addEventListener("tfp:toggle-sidebar", onToggle);
+    window.addEventListener("tfp:close-sidebar", onClose);
+    return () => {
+      window.removeEventListener("tfp:toggle-sidebar", onToggle);
+      window.removeEventListener("tfp:close-sidebar", onClose);
+    };
+  }, []);
+
+  // Lock body scroll while the mobile drawer is open.
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  // Any link/button tapped inside the drawer closes it (desktop is a no-op).
+  const handleInsideClick = (e: ReactMouseEvent<HTMLElement>) => {
+    if ((e.target as HTMLElement).closest("a, button")) setOpen(false);
+  };
 
   // Reports & analytics are reserved for Project Managers, Workspace Owners, and Administrators.
   const canViewReports = maxEffectiveLevel(user ?? null, workspaces) >= LEVEL.manage;
@@ -70,7 +99,36 @@ export default function Sidebar({
     (href !== "/dashboard" && pathname.startsWith(href));
 
   return (
-    <aside className="sticky top-16 flex h-[calc(100vh-4rem)] w-64 flex-col border-r border-slate-800 bg-slate-900/60 p-4 backdrop-blur-md">
+    <>
+      {/* Mobile backdrop */}
+      {open && (
+        <div
+          className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm lg:hidden"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        onClick={handleInsideClick}
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col border-r border-slate-800 bg-slate-900/95 p-4 backdrop-blur-md transition-transform duration-300 ease-out lg:sticky lg:top-16 lg:z-auto lg:h-[calc(100vh-4rem)] lg:w-64 lg:max-w-none lg:translate-x-0 lg:bg-slate-900/60 ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+      {/* Mobile drawer header */}
+      <div className="mb-5 flex items-center justify-between lg:hidden">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          Menu
+        </p>
+      <button
+        onClick={() => setOpen(false)}
+        aria-label="Close menu"
+        className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-800 bg-slate-950/60 text-slate-400 transition hover:text-white"
+      >
+        <X className="h-4 w-4" />
+      </button>
+      </div>
+
       {/* Workspace Switcher */}
       <div className="mb-6">
         <label className="mb-2 block text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
@@ -197,5 +255,6 @@ export default function Sidebar({
         </div>
       </div>
     </aside>
+    </>
   );
 }

@@ -41,7 +41,7 @@ export default function AnalyticsCharts({ stats }: Props) {
       <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 backdrop-blur-md">
         <h3 className="text-sm font-bold text-slate-200 mb-1">Task Completion Overview</h3>
         <p className="text-xs text-slate-400 mb-4">Ratio of completed vs pending project tasks</p>
-        <div className="h-64 w-full">
+        <div className="h-56 w-full sm:h-64">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -71,7 +71,7 @@ export default function AnalyticsCharts({ stats }: Props) {
       <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 backdrop-blur-md">
         <h3 className="text-sm font-bold text-slate-200 mb-1">Task Distribution by Priority</h3>
         <p className="text-xs text-slate-400 mb-4">Breakdown of active tasks across priority levels</p>
-        <div className="h-64 w-full">
+        <div className="h-56 w-full sm:h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={priorityData}>
               <XAxis dataKey="name" stroke="#64748b" fontSize={11} />

@@ -53,6 +53,47 @@
   --color-slate-800: #e2e8f0;
   --color-slate-900: #f1f5f9;
   --color-slate-950: #f8fafc;
+
+  /*
+     The app was authored dark-first with hardcoded `text-white` headings and
+     pale 300/400 accent tints. On a light background those become unreadable,
+     so remap them to dark ink here. Saturated surfaces (indigo buttons,
+     gradients) restore pure white via the whitelist block below.
+  */
+  --color-white: #0f172a;
+  --color-indigo-200: #4f46e5;
+  --color-indigo-300: #4f46e5;
+  --color-indigo-400: #4338ca;
+  --color-sky-300: #0284c7;
+  --color-sky-400: #0369a1;
+  --color-emerald-300: #059669;
+  --color-emerald-400: #047857;
+  --color-amber-300: #d97706;
+  --color-amber-400: #b45309;
+  --color-violet-300: #7c3aed;
+  --color-rose-300: #e11d48;
+  --color-rose-400: #be123c;
+  --color-pink-400: #db2777;
+  --color-orange-400: #ea580c;
+}
+
+/*
+   Keep pure-white text (and white surfaces) on saturated brand surfaces:
+   primary buttons and the indigo→violet brand gradients. Everything else
+   inherits the dark-ink `--color-white` remap above.
+*/
+[data-theme="light"] :where(:not(.lp-shell *, .static-light *)) :is(
+  .bg-indigo-600, .bg-indigo-500,
+  .from-indigo-600, .from-indigo-500, .to-indigo-600, .to-indigo-500,
+  .from-violet-600, .from-violet-500, .to-violet-600, .to-violet-500,
+  .bg-violet-600, .bg-violet-500,
+  .bg-emerald-600, .bg-emerald-500,
+  .bg-sky-600, .bg-sky-500,
+  .bg-amber-600, .bg-amber-500,
+  .bg-rose-600, .bg-rose-500,
+  .bg-pink-600, .bg-pink-500
+) {
+  --color-white: #ffffff;
 }
 
 body {
