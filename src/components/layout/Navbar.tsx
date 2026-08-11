@@ -33,6 +33,8 @@ import {
 import { IUser, INotification } from "@/types";
 import { timeAgo } from "@/lib/time";
 import Image from "next/image";
+import ThemeToggle from "@/components/theme/ThemeToggle";
+import CommandPalette from "@/components/command/CommandPalette";
 
 interface NavbarProps {
   user: IUser | null;
@@ -142,21 +144,22 @@ export default function Navbar({
         {/* Global Search Bar */}
         <div className="relative hidden md:block w-72">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search projects, tasks, members... (Enter)"
-            onKeyDown={e => {
-              if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
-                router.push(`/search?q=${encodeURIComponent((e.target as HTMLInputElement).value.trim())}`);
-              }
-            }}
-            className="w-full rounded-lg border border-slate-800 bg-slate-950/60 py-1.5 pl-9 pr-4 text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("tfp:open-command"))}
+            className="w-full rounded-lg border border-slate-800 bg-slate-950/60 py-1.5 pl-9 pr-14 text-left text-xs text-slate-500 transition hover:border-slate-700 hover:text-slate-400"
+          >
+            Search projects, tasks, members…
+          </button>
+          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] text-slate-400">
+            ⌘K
+          </kbd>
         </div>
       </div>
 
       {/* Right Actions */}
       <div className="flex items-center gap-3">
+        {/* Theme toggle */}
+        <ThemeToggle />
         {/* Quick Action Button */}
         {user && !isGuest && (
           <div className="relative">
@@ -394,6 +397,7 @@ export default function Navbar({
           </div>
         )}
       </div>
+      <CommandPalette />
     </header>
   );
 }

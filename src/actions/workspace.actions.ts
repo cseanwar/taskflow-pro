@@ -7,6 +7,15 @@ export async function createWorkspaceAction(formData: FormData) {
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
   const logo = formData.get('logo') as string;
+  const slug = formData.get('slug') as string;
+  const industry = formData.get('industry') as string;
+  let features: Record<string, boolean> | undefined;
+  try {
+    const raw = formData.get('features') as string;
+    if (raw) features = JSON.parse(raw) as Record<string, boolean>;
+  } catch {
+    features = undefined;
+  }
 
   if (!name) {
     return { success: false, message: 'Workspace name is required.' };
@@ -14,12 +23,41 @@ export async function createWorkspaceAction(formData: FormData) {
 
   const result = await fetchWithAuth('/workspaces', {
     method: 'POST',
-    body: JSON.stringify({ name, description, logo }),
+    body: JSON.stringify({ name, description, logo, slug, industry, features }),
   });
 
   if (result.success) {
     revalidatePath('/workspaces');
     revalidatePath('/dashboard');
+  }
+
+  return result;
+}
+
+export async function updateWorkspaceAction(
+  id: string,
+  payload: { name?: string; description?: string; industry?: string; features?: Record<string, boolean> }
+) {
+  const result = await fetchWithAuth(`/workspaces/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+
+  if (result.success) {
+    revalidatePath(`/workspaces/${id}`);
+  }
+
+  return result;
+}
+
+export async function updateWorkspaceFeaturesAction(id: string, features: Record<string, boolean>) {
+  const result = await fetchWithAuth(`/workspaces/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ features }),
+  });
+
+  if (result.success) {
+    revalidatePath(`/workspaces/${id}`);
   }
 
   return result;

@@ -6,6 +6,53 @@
   --card-bg: rgba(30, 41, 59, 0.7);
   --border-color: rgba(255, 255, 255, 0.1);
   --primary-accent: #6366f1;
+  --app-dot: rgba(148, 163, 184, 0.09);
+  --badge-urgent-fg: #f87171;
+  --badge-high-fg: #fb923c;
+  --badge-medium-fg: #facc15;
+  --badge-low-fg: #60a5fa;
+  --scroll-track: rgba(15, 23, 42, 0.5);
+  --scroll-thumb: rgba(99, 102, 241, 0.3);
+  --scroll-thumb-hover: rgba(99, 102, 241, 0.6);
+  --nav-height: 4rem;
+  color-scheme: dark;
+}
+
+/*
+   Phase 4 — Light theme.
+   The whole app was authored dark-first with hardcoded slate utilities.
+   Tailwind v4 emits every `bg-slate-*` / `border-slate-*` / `text-slate-*`
+   utility through the `--color-slate-*` theme variables, so remapping those
+   variables converts the entire UI in one pass. The `:not(.lp-shell *)`
+   guard keeps the (already light) marketing landing page untouched, and
+   `.static-light` guards standalone always-light surfaces (onboarding).
+*/
+[data-theme="light"] :where(:not(.lp-shell *, .static-light *)) {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card-bg: rgba(255, 255, 255, 0.78);
+  --border-color: rgba(15, 23, 42, 0.1);
+  --app-dot: rgba(100, 116, 139, 0.11);
+  --badge-urgent-fg: #dc2626;
+  --badge-high-fg: #ea580c;
+  --badge-medium-fg: #ca8a04;
+  --badge-low-fg: #2563eb;
+  --scroll-track: rgba(226, 232, 240, 0.7);
+  --scroll-thumb: rgba(99, 102, 241, 0.4);
+  --scroll-thumb-hover: rgba(99, 102, 241, 0.65);
+  color-scheme: light;
+
+  --color-slate-50: #020617;
+  --color-slate-100: #0f172a;
+  --color-slate-200: #1e293b;
+  --color-slate-300: #334155;
+  --color-slate-400: #475569;
+  --color-slate-500: #64748b;
+  --color-slate-600: #94a3b8;
+  --color-slate-700: #cbd5e1;
+  --color-slate-800: #e2e8f0;
+  --color-slate-900: #f1f5f9;
+  --color-slate-950: #f8fafc;
 }
 
 body {
@@ -22,36 +69,36 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
+  background: var(--scroll-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.3);
+  background: var(--scroll-thumb);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.6);
+  background: var(--scroll-thumb-hover);
 }
 
 /* Glassmorphism utility */
 .glass-panel {
-  background: rgba(30, 41, 59, 0.65);
+  background: var(--card-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
 }
 
 .glass-card {
-  background: rgba(30, 41, 59, 0.45);
+  background: var(--card-bg);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
   transition: all 0.2s ease-in-out;
 }
 
 .glass-card:hover {
-  background: rgba(30, 41, 59, 0.75);
+  background: var(--card-bg);
   border-color: rgba(99, 102, 241, 0.3);
   transform: translateY(-2px);
 }
@@ -59,25 +106,25 @@ body {
 /* Priority Badges */
 .badge-urgent {
   background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  color: var(--badge-urgent-fg);
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .badge-high {
   background: rgba(249, 115, 22, 0.15);
-  color: #fb923c;
+  color: var(--badge-high-fg);
   border: 1px solid rgba(249, 115, 22, 0.3);
 }
 
 .badge-medium {
   background: rgba(234, 179, 8, 0.15);
-  color: #facc15;
+  color: var(--badge-medium-fg);
   border: 1px solid rgba(234, 179, 8, 0.3);
 }
 
 .badge-low {
   background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
+  color: var(--badge-low-fg);
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
@@ -216,7 +263,7 @@ body {
 
 /* Faint dotted grid across app content panels */
 .app-dotgrid {
-  background-image: radial-gradient(rgba(148, 163, 184, 0.09) 1px, transparent 1px);
+  background-image: radial-gradient(var(--app-dot) 1px, transparent 1px);
   background-size: 22px 22px;
 }
 

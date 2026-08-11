@@ -33,7 +33,7 @@ export default function RegisterPage() {
 
     setLoading(false);
     if (result.success) {
-      router.push('/dashboard');
+      router.push("/onboarding");
     } else {
       setError(result.message || 'Registration failed.');
     }

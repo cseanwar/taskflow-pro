@@ -54,7 +54,7 @@ export default function GoogleSignInButton({ onError, text = 'signup_with' }: Go
       try {
         const result = await googleSignInAction(response.credential);
         if (result.success) {
-          router.push('/dashboard');
+          router.push('/onboarding');
         } else {
           setLoading(false);
           onError?.(result.message || 'Google sign-in failed.');

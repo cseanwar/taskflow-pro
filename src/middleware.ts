@@ -10,6 +10,9 @@ const protectedPaths = [
   '/notifications',
   '/profile',
   '/team',
+  '/settings',
+  '/collaboration',
+  '/onboarding',
 ];
 
 export function middleware(request: NextRequest) {
@@ -46,6 +49,9 @@ export const config = {
     '/notifications/:path*',
     '/profile/:path*',
     '/team/:path*',
+    '/settings/:path*',
+    '/collaboration/:path*',
+    '/onboarding/:path*',
     '/login',
     '/register',
   ],
