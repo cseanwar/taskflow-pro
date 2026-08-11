@@ -2,6 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { fetchWithAuth } from '../lib/api';
+import { INotificationPrefs } from '../types';
 
 export async function loginAction(formData: FormData) {
   const email = formData.get('email') as string;
@@ -99,4 +100,26 @@ export async function getCurrentUserAction() {
 export async function getAllUsersAction() {
   const result = await fetchWithAuth('/auth/users');
   return result.users || [];
+}
+
+export async function updateProfileAction(payload: {
+  name?: string;
+  avatar?: string;
+  jobTitle?: string;
+  department?: string;
+  notificationPrefs?: INotificationPrefs;
+}) {
+  const result = await fetchWithAuth('/auth/me', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+  return result;
+}
+
+export async function changePasswordAction(currentPassword: string, newPassword: string) {
+  const result = await fetchWithAuth('/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  return result;
 }

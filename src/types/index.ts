@@ -2,6 +2,12 @@ export type UserRole = 'Administrator' | 'Workspace Owner' | 'Project Manager' |
 export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
 export type SprintStatus = 'Planned' | 'Active' | 'Completed';
 
+export interface INotificationPrefs {
+  taskAssigned: { email: boolean; push: boolean };
+  comments: { email: boolean; push: boolean };
+  projectUpdates: { email: boolean; push: boolean };
+}
+
 export interface IUser {
   id: string;
   name: string;
@@ -9,6 +15,9 @@ export interface IUser {
   role: UserRole;
   avatar?: string;
   status: 'active' | 'suspended';
+  jobTitle?: string;
+  department?: string;
+  notificationPrefs?: INotificationPrefs;
 }
 
 export interface IWorkspaceMember {
@@ -32,6 +41,11 @@ export interface IWorkspace {
   updatedAt?: string;
 }
 
+export interface IProjectMemberRole {
+  userId: string;
+  role: UserRole;
+}
+
 export interface IProject {
   _id: string;
   workspaceId: string;
@@ -42,6 +56,8 @@ export interface IProject {
   status: 'active' | 'archived';
   managerId: string;
   members: string[];
+  memberRoles?: IProjectMemberRole[];
+  features?: Record<string, boolean>;
   createdAt?: string;
   updatedAt?: string;
   board?: any;
@@ -105,6 +121,23 @@ export interface IComment {
   };
   text: string;
   attachments?: string[];
+  createdAt: string;
+}
+
+export interface INotification {
+  _id: string;
+  userId: string;
+  type: 'assignment' | 'task_update' | 'due_date' | 'comment' | 'invitation';
+  title: string;
+  message: string;
+  read: boolean;
+  archived?: boolean;
+  actorId?: string;
+  actor?: {
+    name: string;
+    avatar?: string;
+  };
+  link?: string;
   createdAt: string;
 }
 

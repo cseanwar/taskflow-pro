@@ -50,6 +50,12 @@ export default function Sidebar({
       icon: FolderKanban,
     },
     { name: "Calendar View", href: "/calendar", icon: CalendarIcon },
+    { name: "Team Directory", href: "/team", icon: Users },
+    {
+      name: "Settings",
+      href: "/profile",
+      icon: Settings,
+    },
     ...(canViewReports
       ? [{ name: "Analytics & Reports", href: "/reports", icon: BarChart3 }]
       : []),

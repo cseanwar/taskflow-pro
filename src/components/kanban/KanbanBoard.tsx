@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
-import { Filter, Search, Plus, Layers, Calendar, BarChart2 } from 'lucide-react';
+import { Filter, Search, Plus, Layers, Calendar, BarChart2, Settings } from 'lucide-react';
 import KanbanColumn from './KanbanColumn';
 import TaskDetailDrawer from './TaskDetailDrawer';
 import CreateTaskModal from '../modals/CreateTaskModal';
@@ -103,6 +104,15 @@ export default function KanbanBoard({ project, initialTasks, sprints = [], permi
           <span className="rounded-lg border border-slate-700 bg-slate-800/60 px-2 py-1 text-[10px] font-semibold text-slate-400">
             Level {permissions.level}
           </span>
+          {permissions.canManage && (
+            <Link
+              href={`/projects/${project._id}/settings`}
+              className="flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/60 px-2.5 py-1 text-[10px] font-semibold text-slate-300 transition hover:border-indigo-500/40 hover:text-indigo-300"
+            >
+              <Settings className="h-3 w-3" />
+              Settings
+            </Link>
+          )}
         </div>
 
         {/* Filter Controls */}

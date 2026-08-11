@@ -74,3 +74,41 @@ export async function duplicateProjectAction(id: string, workspaceId: string) {
 
   return result;
 }
+
+export async function setProjectMemberAction(projectId: string, userId: string, role: string) {
+  const result = await fetchWithAuth(`/projects/${projectId}/members`, {
+    method: 'POST',
+    body: JSON.stringify({ userId, role }),
+  });
+
+  if (result.success) {
+    revalidatePath(`/projects/${projectId}/settings`);
+  }
+
+  return result;
+}
+
+export async function setProjectMemberRoleAction(projectId: string, userId: string, role: string) {
+  const result = await fetchWithAuth(`/projects/${projectId}/members/${userId}/role`, {
+    method: 'PATCH',
+    body: JSON.stringify({ role }),
+  });
+
+  if (result.success) {
+    revalidatePath(`/projects/${projectId}/settings`);
+  }
+
+  return result;
+}
+
+export async function removeProjectMemberAction(projectId: string, userId: string) {
+  const result = await fetchWithAuth(`/projects/${projectId}/members/${userId}`, {
+    method: 'DELETE',
+  });
+
+  if (result.success) {
+    revalidatePath(`/projects/${projectId}/settings`);
+  }
+
+  return result;
+}

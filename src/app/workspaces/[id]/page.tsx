@@ -14,7 +14,8 @@ import {
   ArrowRight, 
   Loader2,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  Settings
 } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Sidebar from '@/components/layout/Sidebar';
@@ -185,13 +186,22 @@ export default function WorkspaceDetailPage() {
                       </span>
                       <div className="flex items-center gap-1">
                         {canManage && (
-                          <button
-                            onClick={() => handleDuplicateProject(p._id)}
-                            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
-                            title="Duplicate Project"
-                          >
-                            <Copy className="h-4 w-4" />
-                          </button>
+                          <>
+                            <Link
+                              href={`/projects/${p._id}/settings`}
+                              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-indigo-300"
+                              title="Project Settings"
+                            >
+                              <Settings className="h-4 w-4" />
+                            </Link>
+                            <button
+                              onClick={() => handleDuplicateProject(p._id)}
+                              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+                              title="Duplicate Project"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>

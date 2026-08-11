@@ -59,3 +59,21 @@ export async function removeWorkspaceMemberAction(workspaceId: string, userId: s
 
   return result;
 }
+
+export async function changeWorkspaceMemberRoleAction(workspaceId: string, userId: string, role: string) {
+  const result = await fetchWithAuth(`/workspaces/${workspaceId}/members/${userId}/role`, {
+    method: 'PATCH',
+    body: JSON.stringify({ role }),
+  });
+
+  if (result.success) {
+    revalidatePath(`/workspaces/${workspaceId}`);
+  }
+
+  return result;
+}
+
+export async function getWorkspaceActivityAction(workspaceId: string) {
+  const result = await fetchWithAuth(`/workspaces/${workspaceId}/activity`);
+  return result.activity || [];
+}

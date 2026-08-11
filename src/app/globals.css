@@ -198,7 +198,7 @@ body {
   animation: lp-grow 1s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Diagonal speed-lines behind the CTA */
+/* Sheet of light for the CTA */
 @keyframes lp-sheen {
   from { background-position: -200% 0; }
   to   { background-position: 200% 0; }
@@ -208,4 +208,44 @@ body {
   background: linear-gradient(100deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.16) 50%, rgba(255,255,255,0) 60%);
   background-size: 200% 100%;
   animation: lp-sheen 5.5s ease-in-out infinite;
+}
+
+/* ============================================================
+   Phase 3 — app shell utilities (notifications/profile/team/settings)
+   ============================================================ */
+
+/* Faint dotted grid across app content panels */
+.app-dotgrid {
+  background-image: radial-gradient(rgba(148, 163, 184, 0.09) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Display type for page headers */
+.font-display {
+  font-family: var(--font-hanken), system-ui, sans-serif;
+}
+
+/* Staggered rise-in for list rows & cards */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.rise {
+  animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Soft breathing glow for badge dots */
+@keyframes glow-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); }
+  55%      { box-shadow: 0 0 0 5px rgba(99, 102, 241, 0); }
+}
+
+.glow-dot {
+  animation: glow-dot 2.2s ease-out infinite;
+}
+
+/* Thin gradient hairline under page headers */
+.hairline {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.6), rgba(99, 102, 241, 0.08) 55%, transparent);
 }
