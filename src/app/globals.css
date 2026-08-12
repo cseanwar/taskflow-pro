@@ -337,3 +337,13 @@ body {
 .hairline {
   background: linear-gradient(90deg, rgba(99, 102, 241, 0.6), rgba(99, 102, 241, 0.08) 55%, transparent);
 }
+
+/* Gentle float for the orphaned ticket on the not-found page */
+@keyframes notfound-float {
+  0%, 100% { transform: translateY(0) rotate(-2.5deg); }
+  50%      { transform: translateY(-10px) rotate(-2.5deg); }
+}
+
+.notfound-float {
+  animation: notfound-float 6s ease-in-out infinite;
+}
