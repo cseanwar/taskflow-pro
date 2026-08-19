@@ -1,55 +1,164 @@
-# TaskFlow Pro — A Full-Stack Project Management & Team Collaboration System
+# TaskFlow Pro — Client Application
 
-Frontend for TaskFlow Pro: a Kanban / sprint project-management app built with **Next.js 16 (App Router)**, **React 19**, **Tailwind CSS v4**, and **TypeScript**.
+<div align="center">
 
-<details>
-<summary>Project-wide docs</summary>
+**Enterprise Next.js 16 Web Application for Agile Sprint Planning, Kanban Workflows, and Team Collaboration.**
 
-This client works together with the Express API in a separate repository. Read the [root README](../README.md) for the full architecture, roles/access model, and deployment guide.
-</details>
+[![Next.js](https://img.shields.io/badge/Next.js-16.3-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![Redux Toolkit](https://img.shields.io/badge/Redux_Toolkit-RTK-764ABC?style=for-the-badge&logo=redux)](https://redux-toolkit.js.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 
-## Getting Started
+[Quick Start](#getting-started) • [Architecture](#architecture) • [State Management](#state-management-redux-toolkit) • [Key Routes](#application-routes) • [Scripts](#available-scripts)
 
+</div>
+
+---
+
+## 📌 Overview
+
+The **TaskFlow Pro Client** is built on **Next.js 16 App Router**, **React 19**, **Tailwind CSS v4**, and **Redux Toolkit (RTK)**. It communicates with the backend REST API via Next.js Server Actions with automatic `httpOnly` cookie authentication and Bearer JWT authorization.
+
+### Key Capabilities
+* **Interactive Drag-and-Drop Kanban**: Physics-based board powered by `@hello-pangea/dnd` and optimistic updates in Redux.
+* **Agile Sprint Lifecycle**: Visual backlog allocation, active sprint burndown, and velocity reports.
+* **Global Command Palette (`⌘K`)**: Fast, keyboard-first search navigating directly to tasks, projects, or team members.
+* **Team Management & Role Delegation**: Workspace member invites, role level switches, and activity auditing.
+* **Multi-Theme Experience**: Zero-flicker ThemeProvider supporting Light, Dark, and System modes.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+* **Node.js** `>= 18.0.0`
+* **npm** `>= 9.0.0`
+* **TaskFlow Pro Backend API** running on `http://localhost:5000` (see [Server README](../project-management-server/README.md))
+
+### 1. Installation
 ```bash
+# Navigate to client directory
+cd project-management-client
+
+# Install dependencies
 npm install
-npm run dev        # → http://localhost:3000
 ```
 
-Create `.env` (unsupported vars are ignored — the app uses these two):
+### 2. Configure Environment Variables
+Create `.env` in `project-management-client/`:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:5000   # no /api suffix; fetchWithAuth appends it
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=               # optional — Google sign-in
+# Backend API Base URL (no trailing /api suffix; fetchWithAuth appends /api)
+NEXT_PUBLIC_API_URL=http://localhost:5000
+
+# Optional: Google OAuth 2.0 Web Client ID
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_oauth_client_id.apps.googleusercontent.com
 ```
 
-> Some template leftovers (better-auth, Stripe, imgbb, Google template vars) exist in the client `.env` — they are **not** used in code.
+### 3. Run Development Server
+```bash
+npm run dev
+# App running on http://localhost:3000
+```
 
-## Scripts
+---
 
-| Script | Description |
-| --- | --- |
-| `npm run dev` | Start the dev server (port 3000) |
-| `npm run build` | Production build (also typechecks with `tsc`) |
-| `npm run start` | Serve the production build |
-| `npm run lint` | ESLint (`eslint`) |
+## 🛠 Available Scripts
 
-## Architecture
+| Script | Command | Purpose |
+| :--- | :--- | :--- |
+| **Development** | `npm run dev` | Starts Turbopack development server on `http://localhost:3000` |
+| **Build** | `npm run build` | Compiles production bundle and typechecks with `tsc` |
+| **Start** | `npm run start` | Serves the optimized production build |
+| **Lint** | `npm run lint` | Runs ESLint analysis across the project |
 
-- **Server access goes through `src/actions/*.ts`** (`'use server'`) using `fetchWithAuth` from `src/lib/api.ts`, which attaches `Authorization: Bearer` from the `tfp_token` cookie and calls `NEXT_PUBLIC_API_URL` + `/api`. Don’t write ad-hoc `fetch` calls in actions — reuse `fetchWithAuth`.
-- **Auth** is a JWT issued by the Express server; the httpOnly cookie is set/cleared by actions in `src/actions/auth.actions.ts`. Route protection lives in `src/middleware.ts` (`/dashboard`, `/workspaces`, `/projects`, `/calendar`, `/reports`, `/search`).
-- **Roles & permissions** are mirrored client-side in `src/lib/permissions.ts` (`effectiveWorkspaceLevel`, `projectPermissions`, `maxEffectiveLevel`) to gate UI/nav. The server remains the source of truth — keep the two in sync.
-- Path alias: `@/*` → `./src/*`.
-- `next.config.ts` enables the React Compiler; `next` is v16 with breaking API changes — read the agent block in this repo’s `AGENTS.md` and the docs under `node_modules/next/dist/docs/` before writing Next code.
+---
 
-## Key Pages
+## 🏛 Architecture & Code Structure
 
-Dashboard · Workspaces · Project board · Project settings · Calendar · Reports · Search · Team · Notifications · Profile · Appearance settings · Onboarding
+```
+src/
+├── actions/                  # 'use server' Server Actions (fetchWithAuth bridge)
+│   ├── auth.actions.ts       # Login, register, Google auth, profile updates
+│   ├── workspace.actions.ts  # Workspace CRUD, invites, member roles
+│   ├── project.actions.ts    # Project CRUD, board initialization
+│   ├── task.actions.ts       # Task CRUD, column moves, comments, checklists
+│   ├── sprint.actions.ts     # Sprint lifecycle (Planned → Active → Completed)
+│   ├── analytics.actions.ts  # KPIs, velocity, and workload metrics
+│   ├── notification.actions.ts # Notification feeds and read receipts
+│   └── search.actions.ts     # Global multi-entity search
+│
+├── app/                      # Next.js 16 App Router
+│   ├── (auth)/               # Login & Register views
+│   ├── dashboard/            # Executive summary & quick actions
+│   ├── workspaces/[id]/      # Workspace project grids & settings
+│   ├── projects/[id]/        # Kanban board & sprint filters
+│   │   └── settings/         # Project configuration & archiving
+│   ├── calendar/             # Deadline schedule view
+│   ├── reports/              # Performance & velocity reports (Recharts)
+│   ├── team/                 # Workspace members & permissions
+│   ├── notifications/        # Live notification center
+│   ├── settings/appearance/  # Theme & display preferences
+│   ├── not-found.tsx         # Branded 404 page
+│   └── layout.tsx            # Root layout with Redux & Theme Providers
+│
+├── components/               # Modular UI Components
+│   ├── kanban/               # KanbanBoard, KanbanColumn, TaskCard, TaskDetailDrawer
+│   ├── layout/               # Navbar, Sidebar, ThemeToggle
+│   ├── modals/               # CreateTaskModal, CreateProjectModal, InviteMemberModal
+│   ├── command/              # CommandPalette (⌘K)
+│   ├── dashboard/            # AnalyticsCharts & KPI widgets
+│   ├── reports/              # ReportsView, VelocityChart, ProductivityTable
+│   └── shared/               # AppShell, AccessDenied (403), PageHeader
+│
+├── lib/                      # Core Utilities
+│   ├── api.ts                # fetchWithAuth HTTP abstraction with JWT cookie injection
+│   ├── permissions.ts        # Client-side 5-tier RBAC mirror
+│   ├── theme.tsx             # React Theme Context (Light / Dark / System)
+│   └── theme-script.ts       # Synchronous pre-paint head script
+│
+├── redux/                    # Redux Toolkit Global State
+│   ├── store.ts              # makeStore() root configuration
+│   ├── hooks.ts              # useAppDispatch, useAppSelector, useAppStore
+│   ├── provider.tsx          # Client ReduxProvider wrapper
+│   └── slices/               # authSlice, workspaceSlice, kanbanSlice, notificationSlice, uiSlice
+│
+└── types/                    # Shared TypeScript interfaces & models
+```
 
-Plus custom **404** (`src/app/not-found.tsx`) and **403** (`src/components/shared/AccessDenied.tsx`) screens designed in the same visual language.
+---
 
-## Verification
+## ⚡ State Management (Redux Toolkit)
 
-- Lint: `npm run lint` (eslint).
-- Typecheck: `npm run build` or `npx tsc --noEmit`.
-- A small, pre-existing baseline of lint errors/warnings exists (`calendar/`, `workspaces/`, `actions/`, `types/`) — don’t chase them; just don’t add new ones.
-- No test framework is configured.
+Global state is managed via Redux Toolkit (`@reduxjs/toolkit` + `react-redux`):
+
+* **`authSlice`**: Active authenticated user, profile details, and session status.
+* **`workspaceSlice`**: Workspaces array, current active workspace, member rosters, and audit activity.
+* **`kanbanSlice`**: Project tasks, optimistic column re-ordering, active drawer item, priority filters, sprint filters, and keyword searches.
+* **`notificationSlice`**: Notification items and unread count badge.
+* **`uiSlice`**: Global modal visibility (Tasks, Projects, Workspaces, Sprints) and mobile sidebar drawer.
+
+---
+
+## 🔒 Client-Side RBAC Mirror
+
+The client mirrors the backend 5-level role model via `src/lib/permissions.ts`:
+
+```typescript
+export const LEVEL = {
+  read: 1,       // Guest User +: view shared boards and tasks
+  contribute: 2, // Team Member +: move cards, check items, post comments
+  manage: 3,     // Project Manager +: create/edit projects, tasks, sprints, reports
+  admin: 4,      // Workspace Owner +: invite/remove members, update workspace
+  platform: 5,   // Administrator: platform-wide user status management
+} as const;
+```
+
+---
+
+## 🚢 Deployment
+
+1. Set up on **Vercel** selecting the `Next.js` framework preset.
+2. Set Environment Variable: `NEXT_PUBLIC_API_URL` to your production backend API URL (e.g. `https://your-api.vercel.app`).
+3. For Google OAuth, register your production origin in the Google Cloud Console Authorized JavaScript Origins.
