@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
-:root {
+:root,
+[data-theme="dark"],
+html.dark {
   --background: #0f172a;
   --foreground: #f8fafc;
   --card-bg: rgba(30, 41, 59, 0.7);
@@ -18,21 +20,16 @@
   color-scheme: dark;
 }
 
-/*
-   Phase 4 — Light theme.
-   The whole app was authored dark-first with hardcoded slate utilities.
-   Tailwind v4 emits every `bg-slate-*` / `border-slate-*` / `text-slate-*`
-   utility through the `--color-slate-*` theme variables, so remapping those
-   variables converts the entire UI in one pass. The `:not(.lp-shell *)`
-   guard keeps the (already light) marketing landing page untouched, and
-   `.static-light` guards standalone always-light surfaces (onboarding).
-*/
-[data-theme="light"] :where(:not(.lp-shell *, .static-light *)) {
+/* Light Theme Variables */
+:root[data-theme="light"],
+[data-theme="light"],
+html.light,
+body.light {
   --background: #f8fafc;
   --foreground: #0f172a;
-  --card-bg: rgba(255, 255, 255, 0.78);
-  --border-color: rgba(15, 23, 42, 0.1);
-  --app-dot: rgba(100, 116, 139, 0.11);
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --border-color: rgba(15, 23, 42, 0.12);
+  --app-dot: rgba(100, 116, 139, 0.12);
   --badge-urgent-fg: #dc2626;
   --badge-high-fg: #ea580c;
   --badge-medium-fg: #ca8a04;
@@ -56,9 +53,7 @@
 
   /*
      The app was authored dark-first with hardcoded `text-white` headings and
-     pale 300/400 accent tints. On a light background those become unreadable,
-     so remap them to dark ink here. Saturated surfaces (indigo buttons,
-     gradients) restore pure white via the whitelist block below.
+     pale 300/400 accent tints. On a light background those become dark ink.
   */
   --color-white: #0f172a;
   --color-indigo-200: #4f46e5;
@@ -77,12 +72,27 @@
   --color-orange-400: #ea580c;
 }
 
-/*
-   Keep pure-white text (and white surfaces) on saturated brand surfaces:
-   primary buttons and the indigo→violet brand gradients. Everything else
-   inherits the dark-ink `--color-white` remap above.
-*/
-[data-theme="light"] :where(:not(.lp-shell *, .static-light *)) :is(
+/* Reset for marketing landing page and standalone static surfaces */
+.lp-shell,
+.lp-shell *,
+.static-light,
+.static-light * {
+  --color-white: #ffffff;
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+}
+
+/* Saturated brand buttons keep pure white text in light mode */
+:is([data-theme="light"], html.light) :is(
   .bg-indigo-600, .bg-indigo-500,
   .from-indigo-600, .from-indigo-500, .to-indigo-600, .to-indigo-500,
   .from-violet-600, .from-violet-500, .to-violet-600, .to-violet-500,
@@ -92,7 +102,18 @@
   .bg-amber-600, .bg-amber-500,
   .bg-rose-600, .bg-rose-500,
   .bg-pink-600, .bg-pink-500
-) {
+),
+:is([data-theme="light"], html.light) :is(
+  .bg-indigo-600, .bg-indigo-500,
+  .from-indigo-600, .from-indigo-500, .to-indigo-600, .to-indigo-500,
+  .from-violet-600, .from-violet-500, .to-violet-600, .to-violet-500,
+  .bg-violet-600, .bg-violet-500,
+  .bg-emerald-600, .bg-emerald-500,
+  .bg-sky-600, .bg-sky-500,
+  .bg-amber-600, .bg-amber-500,
+  .bg-rose-600, .bg-rose-500,
+  .bg-pink-600, .bg-pink-500
+) * {
   --color-white: #ffffff;
 }
 

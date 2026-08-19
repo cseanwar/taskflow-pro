@@ -57,11 +57,10 @@ export default function AppearanceClient() {
                 <button
                   key={opt.value}
                   onClick={() => setTheme(opt.value)}
-                  className={`group relative rounded-2xl border p-4 text-left transition ${
-                    active
+                  className={`group relative rounded-2xl border p-4 text-left transition ${active
                       ? "border-indigo-500/50 bg-indigo-600/10 shadow-lg shadow-indigo-950/40"
                       : "border-slate-800 bg-slate-950/40 hover:border-slate-700 hover:bg-slate-950/70"
-                  }`}
+                    }`}
                 >
                   {active && (
                     <span className="absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-white">

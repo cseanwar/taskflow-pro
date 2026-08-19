@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Users,
   UserPlus,
@@ -14,6 +15,7 @@ import {
   History,
   Globe,
   Loader2,
+  Plus,
 } from "lucide-react";
 import { IUser, IWorkspace, IWorkspaceMember, IActivityLog } from "@/types";
 import {
@@ -32,6 +34,7 @@ const INVITABLE_ROLES = ["Guest User", "Team Member", "Project Manager"] as cons
 const ROLE_STYLE: Record<string, string> = {
   "Workspace Owner": "bg-amber-500/15 text-amber-300 border-amber-500/30",
   Admin: "bg-violet-500/15 text-violet-300 border-violet-500/30",
+  Administrator: "bg-violet-500/15 text-violet-300 border-violet-500/30",
   "Project Manager": "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
   "Team Member": "bg-sky-500/15 text-sky-300 border-sky-500/30",
   "Guest User": "bg-slate-500/15 text-slate-300 border-slate-500/30",
@@ -39,16 +42,16 @@ const ROLE_STYLE: Record<string, string> = {
 
 export default function TeamClient({
   user,
-  workspaces,
+  workspaces = [],
   initialDetail,
-  initialActivity,
+  initialActivity = [],
 }: {
   user: IUser;
   workspaces: IWorkspace[];
   initialDetail: IWorkspace | null;
   initialActivity: IActivityLog[];
 }) {
-  const [workspace, setWorkspace] = useState<IWorkspace>(initialDetail as IWorkspace);
+  const [workspace, setWorkspace] = useState<IWorkspace | null>(initialDetail || (workspaces[0] ?? null));
   const [activity, setActivity] = useState<IActivityLog[]>(initialActivity);
   const [query, setQuery] = useState("");
   const [loadingWs, setLoadingWs] = useState(false);
@@ -70,20 +73,27 @@ export default function TeamClient({
   const switchWorkspace = async (id: string) => {
     if (!id) return;
     setLoadingWs(true);
-    const [detail, act] = await Promise.all([
-      getWorkspaceByIdAction(id),
-      getWorkspaceActivityAction(id),
-    ]);
-    setWorkspace(detail as IWorkspace);
-    setActivity(act);
-    setLoadingWs(false);
+    try {
+      const [detail, act] = await Promise.all([
+        getWorkspaceByIdAction(id),
+        getWorkspaceActivityAction(id),
+      ]);
+      if (detail) {
+        setWorkspace(detail);
+      }
+      setActivity(act || []);
+    } catch (err) {
+      console.error("Failed to switch workspace:", err);
+    } finally {
+      setLoadingWs(false);
+    }
   };
 
   useEffect(() => {
-    if (workspaces.length === 0) return;
-    void switchWorkspace(workspaces[0]._id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!workspace && workspaces.length > 0) {
+      void switchWorkspace(workspaces[0]._id);
+    }
+  }, [workspaces, workspace]);
 
   const handleInvite = async () => {
     setInviteMsg(null);
@@ -102,8 +112,8 @@ export default function TeamClient({
         getWorkspaceByIdAction(workspaceId),
         getWorkspaceActivityAction(workspaceId),
       ]);
-      setWorkspace(detail as IWorkspace);
-      setActivity(act);
+      if (detail) setWorkspace(detail);
+      setActivity(act || []);
     }
   };
 
@@ -115,8 +125,8 @@ export default function TeamClient({
         getWorkspaceByIdAction(workspaceId),
         getWorkspaceActivityAction(workspaceId),
       ]);
-      setWorkspace(detail as IWorkspace);
-      setActivity(act);
+      if (detail) setWorkspace(detail);
+      setActivity(act || []);
     }
   };
 
@@ -129,8 +139,8 @@ export default function TeamClient({
         getWorkspaceByIdAction(workspaceId),
         getWorkspaceActivityAction(workspaceId),
       ]);
-      setWorkspace(detail as IWorkspace);
-      setActivity(act);
+      if (detail) setWorkspace(detail);
+      setActivity(act || []);
     }
   };
 
@@ -146,16 +156,35 @@ export default function TeamClient({
     }
   };
 
+  if (workspaces.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-900/30 p-12 text-center">
+        <Users className="mx-auto h-10 w-10 text-slate-500" />
+        <h3 className="mt-3 text-base font-bold text-slate-200">No workspaces found</h3>
+        <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+          You need to be part of a workspace to view team members and manage collaborators.
+        </p>
+        <Link
+          href="/workspaces"
+          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-500"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Create Workspace</span>
+        </Link>
+      </div>
+    );
+  }
+
   const filteredMembers = (workspace?.members || []).filter(m =>
     `${m.name || ""} ${m.email || ""}`.toLowerCase().includes(query.toLowerCase())
   );
 
   return (
     <div className="space-y-6">
-      {!workspace ? (
+      {!workspace || loadingWs ? (
         <div className="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/50 py-16 text-xs text-slate-500">
           <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
-          Loading workspace…
+          Loading workspace details…
         </div>
       ) : (
         <>
@@ -172,7 +201,7 @@ export default function TeamClient({
                 >
                   {workspaces.map(w => (
                     <option key={w._id} value={w._id}>
-                      {w.name} · {w.members.length} members
+                      {w.name} · {w.members?.length ?? 0} members
                     </option>
                   ))}
                 </select>
@@ -236,7 +265,7 @@ export default function TeamClient({
                   <Users className="h-4 w-4 text-indigo-400" />
                   Team Members
                   <span className="rounded-full bg-slate-800 px-2 py-0.5 font-mono text-[10px] text-slate-400">
-                    {workspace.members.length}
+                    {workspace.members?.length ?? 0}
                   </span>
                 </h3>
                 <div className="relative w-56">

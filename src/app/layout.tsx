@@ -45,9 +45,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} ${hanken.variable} ${jetbrains.variable} h-full antialiased`}
     >
       <head>
-        <Script id="theme-init" strategy="beforeInteractive">
-          {THEME_SCRIPT}
-        </Script>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col font-(family-name:--font-inter)">
         <ThemeProvider>{children}</ThemeProvider>

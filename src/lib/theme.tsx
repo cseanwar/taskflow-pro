@@ -33,10 +33,15 @@ function resolve(systemPrefersLight: boolean, theme: Theme): ResolvedTheme {
 
 function readStored(): Theme {
   if (typeof window === "undefined") return "system";
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  return stored === "light" || stored === "dark" || stored === "system"
-    ? stored
-    : "system";
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored === "light" || stored === "dark" || stored === "system") {
+      return stored;
+    }
+  } catch {
+    /* ignore */
+  }
+  return "system";
 }
 
 function persist(theme: Theme) {
@@ -49,7 +54,18 @@ function persist(theme: Theme) {
 }
 
 function applyTheme(theme: ResolvedTheme) {
-  document.documentElement.setAttribute("data-theme", theme);
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  root.setAttribute("data-theme", theme);
+  if (theme === "light") {
+    root.classList.remove("dark");
+    root.classList.add("light");
+    root.style.colorScheme = "light";
+  } else {
+    root.classList.remove("light");
+    root.classList.add("dark");
+    root.style.colorScheme = "dark";
+  }
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -57,19 +73,24 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [systemPrefersLight, setSystemPrefersLight] = useState(false);
 
   // Initialize from storage + system preference after mount.
-  // State sync is deferred to a microtask so the first client render
-  // matches SSR; the FOUC <head> script already painted the correct theme.
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: light)");
     const stored = readStored();
+    const isLight = mq.matches;
 
-    Promise.resolve().then(() => {
-      setSystemPrefersLight(mq.matches);
-      setThemeState(stored);
-      applyTheme(resolve(mq.matches, stored));
-    });
+    setSystemPrefersLight(isLight);
+    setThemeState(stored);
+    applyTheme(resolve(isLight, stored));
 
-    const onChange = () => setSystemPrefersLight(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => {
+      const systemLight = e.matches;
+      setSystemPrefersLight(systemLight);
+      const currentStored = readStored();
+      if (currentStored === "system") {
+        applyTheme(systemLight ? "light" : "dark");
+      }
+    };
+
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
@@ -92,14 +113,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const resolved = useMemo(
+    () => resolve(systemPrefersLight, theme),
+    [systemPrefersLight, theme]
+  );
+
   const value = useMemo<ThemeContextValue>(
     () => ({
       theme,
-      resolvedTheme: resolve(systemPrefersLight, theme),
+      resolvedTheme: resolved,
       setTheme,
       toggle,
     }),
-    [theme, systemPrefersLight, setTheme, toggle]
+    [theme, resolved, setTheme, toggle]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
@@ -112,3 +138,4 @@ export function useTheme(): ThemeContextValue {
   }
   return ctx;
 }
+
