@@ -21,6 +21,9 @@ import {
 import { IUser, IWorkspace } from "@/types";
 import Image from "next/image";
 import { LEVEL, maxEffectiveLevel } from "@/lib/permissions";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { setWorkspaces, setActiveWorkspace } from "@/redux/slices/workspaceSlice";
+import { setSidebarMobileOpen } from "@/redux/slices/uiSlice";
 
 interface SidebarProps {
   workspaces?: IWorkspace[];
@@ -31,28 +34,48 @@ interface SidebarProps {
 }
 
 export default function Sidebar({
-  workspaces = [],
-  activeWorkspace,
-  user,
+  workspaces: initialWorkspaces = [],
+  activeWorkspace: initialActiveWorkspace,
+  user: initialUser,
   onSelectWorkspace,
   onOpenCreateWorkspace,
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
-  // Mobile drawer state, toggled from the Navbar's hamburger via a custom event.
-  const [open, setOpen] = useState(false);
+  const reduxWorkspaces = useAppSelector((state) => state.workspace.workspaces);
+  const reduxActiveWorkspace = useAppSelector((state) => state.workspace.activeWorkspace);
+  const reduxUser = useAppSelector((state) => state.auth.user);
+  const open = useAppSelector((state) => state.ui.isSidebarMobileOpen);
+
+  const workspaces = reduxWorkspaces.length > 0 ? reduxWorkspaces : initialWorkspaces;
+  const activeWorkspace = reduxActiveWorkspace || initialActiveWorkspace || (workspaces[0] ?? null);
+  const user = reduxUser || initialUser;
 
   useEffect(() => {
-    const onToggle = () => setOpen((o) => !o);
-    const onClose = () => setOpen(false);
+    if (initialWorkspaces.length > 0 && reduxWorkspaces.length === 0) {
+      dispatch(setWorkspaces(initialWorkspaces));
+    }
+    if (initialActiveWorkspace) {
+      dispatch(setActiveWorkspace(initialActiveWorkspace));
+    }
+  }, [dispatch, initialWorkspaces, initialActiveWorkspace, reduxWorkspaces.length]);
+
+  const setOpen = (isOpen: boolean) => {
+    dispatch(setSidebarMobileOpen(isOpen));
+  };
+
+  useEffect(() => {
+    const onToggle = () => dispatch(setSidebarMobileOpen(!open));
+    const onClose = () => dispatch(setSidebarMobileOpen(false));
     window.addEventListener("tfp:toggle-sidebar", onToggle);
     window.addEventListener("tfp:close-sidebar", onClose);
     return () => {
       window.removeEventListener("tfp:toggle-sidebar", onToggle);
       window.removeEventListener("tfp:close-sidebar", onClose);
     };
-  }, []);
+  }, [dispatch, open]);
 
   // Lock body scroll while the mobile drawer is open.
   useEffect(() => {

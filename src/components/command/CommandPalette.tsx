@@ -6,6 +6,8 @@ import { Search, FolderKanban, CheckCircle2, User, CornerDownLeft, X } from "luc
 import { searchAction } from "@/actions/search.actions";
 import { ISearchResults } from "@/types";
 import Image from "next/image";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { setCommandPaletteOpen } from "@/redux/slices/uiSlice";
 
 interface FlatItem {
   id: string;
@@ -19,7 +21,8 @@ interface FlatItem {
 
 export default function CommandPalette() {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const dispatch = useAppDispatch();
+  const open = useAppSelector((state) => state.ui.isCommandPaletteOpen);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ISearchResults>({ tasks: [], projects: [], members: [] });
   const [loading, setLoading] = useState(false);
@@ -28,21 +31,25 @@ export default function CommandPalette() {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const openPalette = () => {
-    setOpen(true);
+    dispatch(setCommandPaletteOpen(true));
     setQuery("");
     setResults({ tasks: [], projects: [], members: [] });
     setActiveIndex(0);
     setTimeout(() => inputRef.current?.focus(), 30);
   };
 
+  const closePalette = () => {
+    dispatch(setCommandPaletteOpen(false));
+  };
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        if (open) setOpen(false);
+        if (open) closePalette();
         else openPalette();
       }
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") closePalette();
     };
     const onCustomOpen = () => openPalette();
     window.addEventListener("keydown", onKey);
@@ -51,7 +58,7 @@ export default function CommandPalette() {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("tfp:open-command", onCustomOpen);
     };
-  }, [open]);
+  }, [open, dispatch]);
 
   useEffect(() => {
     if (timer.current) clearTimeout(timer.current);
@@ -114,7 +121,7 @@ export default function CommandPalette() {
   const flat = items();
 
   const go = (item: FlatItem) => {
-    setOpen(false);
+    closePalette();
     router.push(item.href);
   };
 
@@ -147,7 +154,7 @@ export default function CommandPalette() {
             className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none"
           />
           <button
-            onClick={() => setOpen(false)}
+            onClick={closePalette}
             className="rounded-md p-1 text-slate-500 transition hover:bg-slate-800 hover:text-slate-300"
           >
             <X className="h-4 w-4" />

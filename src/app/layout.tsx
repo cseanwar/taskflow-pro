@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
-import Script from "next/script";
 import { ThemeProvider } from "@/lib/theme";
 import { THEME_SCRIPT } from "@/lib/theme-script";
+import { ReduxProvider } from "@/redux/provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -48,8 +48,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col font-(family-name:--font-inter)">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ReduxProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </ReduxProvider>
       </body>
     </html>
   );
 }
+

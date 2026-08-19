@@ -46,7 +46,7 @@ export default async function ProjectKanbanPage({ params }: Props) {
   const permissions = projectPermissions(user, activeWorkspace);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col h-screen overflow-hidden">
+    <div className="min-h-screen text-slate-100 flex flex-col h-screen overflow-hidden">
       <Navbar user={user} isGuest={permissions.isGuest} />
 
       <div className="flex flex-1 overflow-hidden">

@@ -85,7 +85,7 @@ export default function SearchPageContent() {
   const showFilters = results.tasks.length > 0;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen text-slate-100 flex flex-col">
       <Navbar user={user} />
 
       <div className="flex flex-1">

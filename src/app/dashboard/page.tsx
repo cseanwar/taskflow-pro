@@ -49,7 +49,7 @@ export default async function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen text-slate-100 flex flex-col">
       <Navbar user={user} />
 
       <div className="flex flex-1">

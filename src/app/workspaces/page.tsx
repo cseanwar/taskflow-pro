@@ -30,7 +30,7 @@ export default function WorkspacesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen text-slate-100 flex flex-col">
       <Navbar user={user} onOpenCreateWorkspace={() => setIsCreateOpen(true)} />
 
       <div className="flex flex-1">

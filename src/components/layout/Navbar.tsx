@@ -36,6 +36,15 @@ import { timeAgo } from "@/lib/time";
 import Image from "next/image";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import CommandPalette from "@/components/command/CommandPalette";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { setUser } from "@/redux/slices/authSlice";
+import {
+  setNotifications,
+  setUnreadCount,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+} from "@/redux/slices/notificationSlice";
+import { toggleSidebarMobile, toggleCommandPalette } from "@/redux/slices/uiSlice";
 
 interface NavbarProps {
   user: IUser | null;
@@ -57,7 +66,7 @@ const NOTIF_ICON = {
 } as const;
 
 export default function Navbar({
-  user,
+  user: initialUser,
   onOpenCreateTask,
   onOpenCreateProject,
   onOpenCreateWorkspace,
@@ -65,19 +74,26 @@ export default function Navbar({
   canCreateProject = true,
 }: NavbarProps) {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const reduxUser = useAppSelector((state) => state.auth.user);
+  const user = reduxUser || initialUser;
+  const { notifications, unreadCount } = useAppSelector((state) => state.notification);
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showQuickCreate, setShowQuickCreate] = useState(false);
-
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [notifications, setNotifications] = useState<INotification[]>([]);
   const [loadingNotifs, setLoadingNotifs] = useState(false);
   const bellRef = useRef<HTMLDivElement>(null);
   const loadedOnce = useRef(false);
 
   useEffect(() => {
-    getUnreadNotificationCountAction().then(setUnreadCount);
-  }, []);
+    if (initialUser) {
+      dispatch(setUser(initialUser));
+    }
+    getUnreadNotificationCountAction().then((count) => {
+      dispatch(setUnreadCount(count));
+    });
+  }, [dispatch, initialUser]);
 
   // Close menus on outside click
   useEffect(() => {
@@ -97,9 +113,8 @@ export default function Navbar({
       loadedOnce.current = true;
       setLoadingNotifs(true);
       getNotificationsAction("all").then(res => {
-        setNotifications(res.slice(0, 6));
+        dispatch(setNotifications(res.slice(0, 6)));
         setLoadingNotifs(false);
-        setUnreadCount(res.filter((n: INotification) => !n.read).length);
       });
     }
   };
@@ -107,18 +122,14 @@ export default function Navbar({
   const handleNotificationClick = async (n: INotification) => {
     if (!n.read) {
       markNotificationReadAction(n._id);
-      setNotifications(prev =>
-        prev.map(p => (p._id === n._id ? { ...p, read: true } : p))
-      );
-      setUnreadCount(c => Math.max(0, c - 1));
+      dispatch(markNotificationAsRead(n._id));
     }
     setShowNotifications(false);
     if (n.link) router.push(n.link);
   };
 
   const handleMarkAllRead = async () => {
-    setNotifications(prev => prev.map(p => ({ ...p, read: true })));
-    setUnreadCount(0);
+    dispatch(markAllNotificationsAsRead());
     await markAllNotificationsReadAction();
   };
 
@@ -135,7 +146,10 @@ export default function Navbar({
       <div className="flex min-w-0 items-center gap-3 lg:gap-6">
         {/* Mobile nav trigger */}
         <button
-          onClick={() => window.dispatchEvent(new CustomEvent("tfp:toggle-sidebar"))}
+          onClick={() => {
+            dispatch(toggleSidebarMobile());
+            window.dispatchEvent(new CustomEvent("tfp:toggle-sidebar"));
+          }}
           aria-label="Open navigation menu"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-800 bg-slate-950/60 text-slate-300 transition hover:border-slate-700 hover:text-white lg:hidden"
         >
@@ -155,7 +169,10 @@ export default function Navbar({
         <div className="relative hidden lg:block w-64 xl:w-72">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <button
-            onClick={() => window.dispatchEvent(new CustomEvent("tfp:open-command"))}
+            onClick={() => {
+              dispatch(toggleCommandPalette());
+              window.dispatchEvent(new CustomEvent("tfp:open-command"));
+            }}
             className="w-full rounded-lg border border-slate-800 bg-slate-950/60 py-1.5 pl-9 pr-14 text-left text-xs text-slate-500 transition hover:border-slate-700 hover:text-slate-400"
           >
             Search projects, tasks, members…

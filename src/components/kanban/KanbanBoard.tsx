@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { Filter, Search, Plus, Layers, Calendar, BarChart2, Settings } from 'lucide-react';
@@ -10,6 +10,18 @@ import CreateTaskModal from '../modals/CreateTaskModal';
 import { moveTaskAction, getTasksByProjectAction } from '@/actions/task.actions';
 import { ITask, ISprint, IProject } from '@/types';
 import { ProjectPermissions } from '@/lib/permissions';
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import {
+  setTasks,
+  setSprints,
+  setSelectedTask,
+  setDefaultColumn,
+  setSearchQuery,
+  setSelectedSprintFilter,
+  setSelectedPriorityFilter,
+  moveTaskOptimistic,
+} from '@/redux/slices/kanbanSlice';
+import { setCreateTaskModalOpen } from '@/redux/slices/uiSlice';
 
 interface KanbanBoardProps {
   project: IProject;
@@ -19,24 +31,21 @@ interface KanbanBoardProps {
 }
 
 export default function KanbanBoard({ project, initialTasks, sprints = [], permissions }: KanbanBoardProps) {
-  const [tasks, setTasks] = useState<ITask[]>(initialTasks);
-  const [lastTasks, setLastTasks] = useState<ITask[]>(initialTasks);
-  if (initialTasks !== lastTasks) {
-    setLastTasks(initialTasks);
-    setTasks(initialTasks);
-  }
-  const [selectedTask, setSelectedTask] = useState<ITask | null>(null);
-  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
-  const [defaultColumn, setDefaultColumn] = useState('todo');
+  const dispatch = useAppDispatch();
+  const tasks = useAppSelector((state) => state.kanban.tasks);
+  const selectedTask = useAppSelector((state) => state.kanban.selectedTask);
+  const isCreateTaskOpen = useAppSelector((state) => state.ui.isCreateTaskModalOpen);
+  const defaultColumn = useAppSelector((state) => state.kanban.defaultColumn);
+  const { searchQuery, selectedSprint, selectedPriority } = useAppSelector((state) => state.kanban.filters);
 
-  // Filters
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSprint, setSelectedSprint] = useState('all');
-  const [selectedPriority, setSelectedPriority] = useState('all');
+  useEffect(() => {
+    dispatch(setTasks(initialTasks));
+    dispatch(setSprints(sprints));
+  }, [dispatch, initialTasks, sprints]);
 
   const refreshTasks = async () => {
     const res = await getTasksByProjectAction(project._id);
-    setTasks(res);
+    dispatch(setTasks(res));
   };
 
   const handleDragEnd = async (result: DropResult) => {
@@ -45,17 +54,14 @@ export default function KanbanBoard({ project, initialTasks, sprints = [], permi
     if (destination.droppableId === source.droppableId && destination.index === source.index) return;
     if (!permissions.canContribute) return;
 
-    // Optimistic UI update
-    const updatedTasks = Array.from(tasks);
-    const draggedTaskIndex = updatedTasks.findIndex(t => t._id === draggableId);
-    if (draggedTaskIndex === -1) return;
-
-    const [movedTask] = updatedTasks.splice(draggedTaskIndex, 1);
-    movedTask.columnId = destination.droppableId;
-    movedTask.order = destination.index;
-
-    updatedTasks.splice(destination.index, 0, movedTask);
-    setTasks(updatedTasks);
+    // Optimistic UI update in Redux store
+    dispatch(
+      moveTaskOptimistic({
+        taskId: draggableId,
+        columnId: destination.droppableId,
+        newOrder: destination.index,
+      })
+    );
 
     // Call Server Action
     await moveTaskAction(draggableId, project._id, destination.droppableId, destination.index);
@@ -123,14 +129,14 @@ export default function KanbanBoard({ project, initialTasks, sprints = [], permi
               type="text"
               placeholder="Filter tasks..."
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={e => dispatch(setSearchQuery(e.target.value))}
               className="w-full rounded-xl border border-slate-800 bg-slate-950/70 py-1.5 pl-8 pr-3 text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
           <select
             value={selectedSprint}
-            onChange={e => setSelectedSprint(e.target.value)}
+            onChange={e => dispatch(setSelectedSprintFilter(e.target.value))}
             className="rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-xs font-medium text-slate-300 focus:border-indigo-500 focus:outline-none"
           >
             <option value="all">All Sprints</option>
@@ -144,7 +150,7 @@ export default function KanbanBoard({ project, initialTasks, sprints = [], permi
 
           <select
             value={selectedPriority}
-            onChange={e => setSelectedPriority(e.target.value)}
+            onChange={e => dispatch(setSelectedPriorityFilter(e.target.value))}
             className="rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-1.5 text-xs font-medium text-slate-300 focus:border-indigo-500 focus:outline-none"
           >
             <option value="all">All Priorities</option>
@@ -157,8 +163,8 @@ export default function KanbanBoard({ project, initialTasks, sprints = [], permi
           {permissions.canManage && (
             <button
               onClick={() => {
-                setDefaultColumn('todo');
-                setIsCreateTaskOpen(true);
+                dispatch(setDefaultColumn('todo'));
+                dispatch(setCreateTaskModalOpen(true));
               }}
               className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-500 shadow-md shadow-indigo-600/20"
             >
@@ -182,10 +188,10 @@ export default function KanbanBoard({ project, initialTasks, sprints = [], permi
                 canAddTask={permissions.canManage}
                 canDrag={permissions.canContribute}
                 onAddTask={colId => {
-                  setDefaultColumn(colId);
-                  setIsCreateTaskOpen(true);
+                  dispatch(setDefaultColumn(colId));
+                  dispatch(setCreateTaskModalOpen(true));
                 }}
-                onSelectTask={task => setSelectedTask(task)}
+                onSelectTask={task => dispatch(setSelectedTask(task))}
               />
             ))}
           </div>
@@ -199,7 +205,7 @@ export default function KanbanBoard({ project, initialTasks, sprints = [], permi
           projectId={project._id}
           sprints={sprints}
           permissions={permissions}
-          onClose={() => setSelectedTask(null)}
+          onClose={() => dispatch(setSelectedTask(null))}
           onUpdateSuccess={refreshTasks}
         />
       )}
@@ -208,7 +214,7 @@ export default function KanbanBoard({ project, initialTasks, sprints = [], permi
       {isCreateTaskOpen && (
         <CreateTaskModal
           isOpen={isCreateTaskOpen}
-          onClose={() => setIsCreateTaskOpen(false)}
+          onClose={() => dispatch(setCreateTaskModalOpen(false))}
           projectId={project._id}
           sprints={sprints}
           onSuccess={refreshTasks}

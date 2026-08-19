@@ -72,7 +72,7 @@ export default function WorkspaceDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
+      <div className="flex min-h-screen items-center justify-center text-white">
         <Loader2 className="h-8 w-8 text-indigo-400 animate-spin" />
       </div>
     );
@@ -80,7 +80,7 @@ export default function WorkspaceDetailPage() {
 
   if (!workspace) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
+      <div className="flex min-h-screen items-center justify-center text-white">
         <p>Workspace not found.</p>
       </div>
     );
@@ -98,7 +98,7 @@ export default function WorkspaceDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen text-slate-100 flex flex-col">
       <Navbar
         user={user}
         isGuest={isGuest}

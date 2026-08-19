@@ -29,6 +29,13 @@ import { LEVEL, effectiveWorkspaceLevel } from "@/lib/permissions";
 import { timeAgo, dayLabel } from "@/lib/time";
 import Image from "next/image";
 
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import {
+  setWorkspaces,
+  setActiveWorkspace,
+  setWorkspaceActivity,
+} from "@/redux/slices/workspaceSlice";
+
 const INVITABLE_ROLES = ["Guest User", "Team Member", "Project Manager"] as const;
 
 const ROLE_STYLE: Record<string, string> = {
@@ -42,7 +49,7 @@ const ROLE_STYLE: Record<string, string> = {
 
 export default function TeamClient({
   user,
-  workspaces = [],
+  workspaces: initialWorkspaces = [],
   initialDetail,
   initialActivity = [],
 }: {
@@ -51,8 +58,15 @@ export default function TeamClient({
   initialDetail: IWorkspace | null;
   initialActivity: IActivityLog[];
 }) {
-  const [workspace, setWorkspace] = useState<IWorkspace | null>(initialDetail || (workspaces[0] ?? null));
-  const [activity, setActivity] = useState<IActivityLog[]>(initialActivity);
+  const dispatch = useAppDispatch();
+  const reduxWorkspaces = useAppSelector((state) => state.workspace.workspaces);
+  const reduxActiveWorkspace = useAppSelector((state) => state.workspace.activeWorkspace);
+  const reduxActivity = useAppSelector((state) => state.workspace.activity);
+
+  const workspaces = reduxWorkspaces.length > 0 ? reduxWorkspaces : initialWorkspaces;
+  const workspace = reduxActiveWorkspace || initialDetail || (workspaces[0] ?? null);
+  const activity = reduxActivity.length > 0 ? reduxActivity : initialActivity;
+
   const [query, setQuery] = useState("");
   const [loadingWs, setLoadingWs] = useState(false);
 
@@ -79,9 +93,11 @@ export default function TeamClient({
         getWorkspaceActivityAction(id),
       ]);
       if (detail) {
-        setWorkspace(detail);
+        dispatch(setActiveWorkspace(detail));
       }
-      setActivity(act || []);
+      if (act) {
+        dispatch(setWorkspaceActivity(act));
+      }
     } catch (err) {
       console.error("Failed to switch workspace:", err);
     } finally {
@@ -90,10 +106,16 @@ export default function TeamClient({
   };
 
   useEffect(() => {
-    if (!workspace && workspaces.length > 0) {
-      void switchWorkspace(workspaces[0]._id);
+    if (initialWorkspaces.length > 0 && reduxWorkspaces.length === 0) {
+      dispatch(setWorkspaces(initialWorkspaces));
     }
-  }, [workspaces, workspace]);
+    if (initialDetail) {
+      dispatch(setActiveWorkspace(initialDetail));
+    }
+    if (initialActivity.length > 0) {
+      dispatch(setWorkspaceActivity(initialActivity));
+    }
+  }, [dispatch, initialWorkspaces, initialDetail, initialActivity, reduxWorkspaces.length]);
 
   const handleInvite = async () => {
     setInviteMsg(null);
@@ -112,8 +134,8 @@ export default function TeamClient({
         getWorkspaceByIdAction(workspaceId),
         getWorkspaceActivityAction(workspaceId),
       ]);
-      if (detail) setWorkspace(detail);
-      setActivity(act || []);
+      if (detail) dispatch(setActiveWorkspace(detail));
+      if (act) dispatch(setWorkspaceActivity(act));
     }
   };
 
@@ -125,8 +147,8 @@ export default function TeamClient({
         getWorkspaceByIdAction(workspaceId),
         getWorkspaceActivityAction(workspaceId),
       ]);
-      if (detail) setWorkspace(detail);
-      setActivity(act || []);
+      if (detail) dispatch(setActiveWorkspace(detail));
+      if (act) dispatch(setWorkspaceActivity(act));
     }
   };
 
@@ -139,8 +161,8 @@ export default function TeamClient({
         getWorkspaceByIdAction(workspaceId),
         getWorkspaceActivityAction(workspaceId),
       ]);
-      if (detail) setWorkspace(detail);
-      setActivity(act || []);
+      if (detail) dispatch(setActiveWorkspace(detail));
+      if (act) dispatch(setWorkspaceActivity(act));
     }
   };
 
