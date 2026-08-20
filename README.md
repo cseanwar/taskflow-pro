@@ -1,8 +1,8 @@
-# TaskFlow Pro — Client Application
+# TaskFlow Pro — A Full-Stack Project Management & Team Collaboration System
 
 <div align="center">
 
-**Enterprise Next.js 16 Web Application for Agile Sprint Planning, Kanban Workflows, and Team Collaboration.**
+**Frontend for TaskFlow Pro: a Kanban / sprint project-management app built with Next.js 16 (App Router), React 19, Tailwind CSS v4, Redux Toolkit (RTK) and TypeScript.**
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.3-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
@@ -34,19 +34,20 @@ The **TaskFlow Pro Client** is built on **Next.js 16 App Router**, **React 19**,
 ### Prerequisites
 * **Node.js** `>= 18.0.0`
 * **npm** `>= 9.0.0`
-* **TaskFlow Pro Backend API** running on `http://localhost:5000` (see [Server README](../project-management-server/README.md))
+* **TaskFlow Pro Backend API** running on `http://localhost:5000` (see [Server README](https://github.com/cseanwar/taskflow-pro-server.git/README.md))
 
 ### 1. Installation
 ```bash
 # Navigate to client directory
-cd project-management-client
+git clone https://github.com/cseanwar/taskflow-pro.git
+cd taskflow-pro
 
 # Install dependencies
 npm install
 ```
 
 ### 2. Configure Environment Variables
-Create `.env` in `project-management-client/`:
+Create `.env` in `taskflow-pro/`:
 
 ```env
 # Backend API Base URL (no trailing /api suffix; fetchWithAuth appends /api)
